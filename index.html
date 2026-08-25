@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Morning Coach</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#182B26">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F2F4F0; --ink:#182B26; --card:#fff; --spruce:#22453A; --amber:#E8A13C;
+    --clay:#C0532F; --mist:#8FA39B; --line:#DDE3DC; --clean:#3E7C59;
+    --display:'Barlow Condensed','Arial Narrow',sans-serif;
+    --body:'Inter',-apple-system,'Segoe UI',sans-serif;
+  }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:var(--body); background:var(--bg); color:var(--ink); }
+  .wrap { max-width:420px; margin:0 auto; padding:20px 16px 48px; }
+  .eyebrow { font-family:var(--display); font-size:14px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--mist); }
+  h1 { font-family:var(--display); font-size:40px; font-weight:700; line-height:1; text-transform:uppercase; margin-top:2px; }
+  .tagrow { margin-top:6px; display:flex; gap:8px; align-items:center; }
+  .tag { font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; background:var(--spruce); color:#fff; border-radius:4px; padding:3px 8px; }
+  .phaselbl { font-size:13px; color:var(--mist); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:14px; }
+  .card .eyebrow { font-size:13px; }
+  .item { display:flex; gap:10px; margin-top:10px; font-size:15px; line-height:1.4; }
+  .dot { width:6px; height:6px; border-radius:3px; background:var(--amber); margin-top:7px; flex-shrink:0; }
+  button { cursor:pointer; font-family:var(--body); }
+  button:focus-visible { outline:3px solid var(--amber); outline-offset:2px; }
+  .bigbtn { width:100%; margin-top:16px; padding:14px 0; border-radius:10px; border:none; font-family:var(--display); font-size:18px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:var(--spruce); color:#fff; }
+  .bigbtn.done { background:var(--clean); }
+  .morning { background:var(--ink); border-radius:14px; padding:18px; margin-top:20px; color:#fff; }
+  .morning .eyebrow { color:var(--amber); }
+  .painrow { display:flex; gap:5px; margin-top:12px; }
+  .painbtn { flex:1; padding:12px 0; border-radius:8px; font-weight:700; font-size:15px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06); color:rgba(255,255,255,.85); }
+  .strip { display:flex; gap:6px; margin-top:16px; align-items:center; }
+  .daydot { width:22px; height:22px; border-radius:50%; }
+  .streak { margin-left:auto; font-size:13px; color:rgba(255,255,255,.75); }
+  .gate { margin-top:12px; background:var(--clean); border-radius:8px; padding:10px 12px; font-size:13px; font-weight:600; }
+  .ghost { width:100%; margin-top:10px; padding:12px 0; border-radius:10px; border:1.5px solid var(--spruce); background:#fff; color:var(--spruce); font-family:var(--display); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  input, textarea { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:14px; font-family:var(--body); margin-top:8px; }
+  .note { font-size:11px; color:var(--mist); margin-top:10px; }
+  .reply { margin-top:12px; background:var(--bg); border-radius:8px; padding:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
+  .settings { display:none; }
+  .settings.open { display:block; }
+  .phasebtns { display:flex; gap:8px; margin-top:8px; }
+  .phasebtn { flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:600; }
+  .phasebtn.on { background:var(--spruce); border-color:var(--spruce); color:#fff; }
+  .gear { background:none; border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--mist); font-size:13px; }
+  .topbar { display:flex; justify-content:space-between; align-items:baseline; }
+  .savenote { text-align:center; font-size:12px; color:var(--mist); margin-top:16px; min-height:16px; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ============ THE PLAN (data only — edit this, not the logic) ============
+const WAKEUP = ["Band calf stretch 3\u00d730s per foot","Toe curls + spreads \u00d715","Ankle circles \u00d710 each way"];
+const PLAN = {
+ 1:{label:"Phase 1 \u00b7 Rebuild the base",gate:"Two-leg calf raises feel easy (\u22643/10)",days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Two-leg towel calf raises 3\u00d712 (3s up \u00b7 2s hold \u00b7 3s down)","Goblet squats 3\u00d710","Single-leg RDL (bodyweight) 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d715/side"]},
+  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex: 8 rows \u2192 8 squats \u2192 8 presses per side \u00b7 4 rounds \u00b7 90s rest","Brisk 15-min walk if foot allows"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","Single-leg glute bridges 3\u00d712/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["Goblet squats 3\u00d710","KB press 3\u00d78/side","KB deadlift 3\u00d710","Banded clamshells 3\u00d715/side","Suitcase carry 3\u00d730s/side"]},
+  Fri:{title:"Loading + easy conditioning",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","20-min brisk walk or KB complex \u00d73 rounds"]},
+  Sat:{title:"Rest",type:"Rest",items:["Wake-up routine only"]},
+  Sun:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","Glute bridges 3\u00d712/side"]}}},
+ 2:{label:"Phase 2 \u00b7 Single-leg loading",gate:"7 straight pain-free mornings unlocks Phase 3",days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg towel calf raises 3\u00d78/side","Goblet squats 3\u00d710 (heavier)","Single-leg RDL + light KB 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d715/side"]},
+  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex \u00b7 4 rounds","Brisk walk 15\u201320 min"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Single-leg towel calf raises 3\u00d78/side","Single-leg glute bridges 3\u00d712/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 3\u00d710 (heavier)","Goblet squat 3\u00d710","Banded clamshells 3\u00d715/side","Suitcase carry 3\u00d730s/side"]},
+  Fri:{title:"Loading + conditioning",type:"Loading",items:["Single-leg towel calf raises 3\u00d78/side","KB complex \u00d73 or 20-min walk"]},
+  Sat:{title:"Active recovery",type:"Rest",items:["30\u201345 min walk \u00b7 flat, soft ground"]},
+  Sun:{title:"Loading only",type:"Loading",items:["Single-leg calf raises 3\u00d78/side","Glute bridges 3\u00d712/side"]}}},
+ 3:{label:"Phase 3 \u00b7 Weighted loading + walk-run",gate:"Every run interval increase needs a clean next morning",days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg calf raises + light KB 3\u00d78/side","Goblet squats 4\u00d78 (heavier)","KB single-leg RDL 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d720/side"]},
+  Tue:{title:"Walk-Run",type:"Run",items:["10-min walk warm-up","1 min easy run / 2 min walk \u00d7 8","5-min walk cool-down","Soft surface \u00b7 flat \u00b7 no speed"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3\u00d78/side","Single-leg banded glute bridges 3\u00d712/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 4\u00d78","Goblet squat 3\u00d710","Clamshells 3\u00d720/side","Carries 3\u00d740s/side"]},
+  Fri:{title:"Walk-Run",type:"Run",items:["Same as Tuesday","If last run's next morning was clean: +30s per run interval"]},
+  Sat:{title:"Conditioning",type:"Conditioning",items:["KB complex 4\u20135 rounds, or 45-min walk"]},
+  Sun:{title:"Rest",type:"Rest",items:["Wake-up routine only"]}}},
+ 4:{label:"Phase 4 \u00b7 Building run volume",gate:"\u226410% weekly run-time increase \u00b7 mornings stay clean",days:{
+  Mon:{title:"Strength A",type:"Strength",items:["Weighted single-leg calf raises 3\u00d78/side (heavier)","Goblet squats 4\u00d78","KB single-leg RDL 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d720/side"]},
+  Tue:{title:"Run",type:"Run",items:["3 min run / 1 min walk \u00d7 6","Progress toward 20 min continuous"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3\u00d78/side","Glute work 3\u00d712/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 4\u00d78","Goblet squat 3\u00d710","Clamshells + carries"]},
+  Fri:{title:"Run",type:"Run",items:["Same progression as Tuesday"]},
+  Sat:{title:"Optional easy run or long walk",type:"Run",items:["Only add a 3rd run in week 8+, only if all morning checks are clean"]},
+  Sun:{title:"Rest",type:"Rest",items:["Wake-up routine only"]}}}
+};
+
+// ============ STATE ============
+const KEY = "pf-coach-state";
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const iso = d => { const t=new Date(d); t.setMinutes(t.getMinutes()-t.getTimezoneOffset()); return t.toISOString().slice(0,10); };
+const today = () => iso(new Date());
+
+function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || def(); } catch { return def(); } }
+function def(){ return { phase:1, painLogs:{}, sessionsDone:{}, apiKey:"", started:today() }; }
+let S = load();
+function save(){ localStorage.setItem(KEY, JSON.stringify(S)); flash("Saved"); }
+
+function lastN(n){ const out=[]; for(let i=n-1;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push(iso(d)); } return out; }
+function streak(){ let s=0; for(let i=0;;i++){ const d=new Date(); d.setDate(d.getDate()-i); const v=S.painLogs[iso(d)]; if(v===undefined){ if(i===0) continue; break; } if(v===0) s++; else break; } return s; }
+const painColor = v => v==null ? "var(--line)" : v===0 ? "var(--clean)" : v<=3 ? "var(--amber)" : "var(--clay)";
+
+// ============ RENDER ============
+let showSettings=false, coachReply="", coachBusy=false;
+
+function render(){
+  const now=new Date(), dk=DAYS[now.getDay()], ph=PLAN[S.phase], sess=ph.days[dk];
+  const t=today(), pain=S.painLogs[t], done=!!S.sessionsDone[t], st=streak();
+  const gateMet = st>=7 && S.phase===2;
+  const app=document.getElementById("app");
+  app.innerHTML = `
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</div>
+      <h1>${sess.title}</h1>
+    </div>
+    <button class="gear" onclick="toggleSettings()" aria-label="Settings">\u2699</button>
+  </div>
+  <div class="tagrow"><span class="tag">${sess.type}</span><span class="phaselbl">${ph.label}</span></div>
+
+  <div class="card settings ${showSettings?"open":""}">
+    <div style="font-size:13px;font-weight:600">Phase (only change at a gate)</div>
+    <div class="phasebtns">${[1,2,3,4].map(p=>`<button class="phasebtn ${S.phase===p?"on":""}" onclick="setPhase(${p})">${p}</button>`).join("")}</div>
+    <div class="note">Gate: ${ph.gate}</div>
+    <div style="font-size:13px;font-weight:600;margin-top:14px">Anthropic API key (optional \u2014 powers the coach)</div>
+    <input type="password" value="${S.apiKey||""}" placeholder="sk-ant-..." onchange="setKey(this.value)">
+    <div class="note">Stored only on this device. Get one at console.anthropic.com. Without it, use your weekly check-in chat instead.</div>
+    <button class="ghost" onclick="exportData()">Copy my data (for weekly check-in)</button>
+  </div>
+
+  <div class="morning">
+    <div class="eyebrow">Morning check \u2014 how's the foot?</div>
+    <div class="painrow">${[0,1,2,3,4,5,6,7].map(v=>`
+      <button class="painbtn" aria-label="Pain ${v}" onclick="logPain(${v})"
+        style="${pain===v?`background:${painColor(v)};border:2px solid var(--amber);color:#fff;`:""}">${v===7?"7+":v}</button>`).join("")}
+    </div>
+    <div class="strip">
+      ${lastN(7).map(d=>`<div class="daydot" title="${d}" style="background:${painColor(S.painLogs[d])};${d===t?"border:2px solid var(--amber);":""}"></div>`).join("")}
+      <div class="streak">${st} clean ${st===1?"morning":"mornings"}</div>
+    </div>
+    ${gateMet?`<div class="gate">Gate met: 7 pain-free mornings. You're cleared for Phase 3 \u2014 walk-run begins.</div>`:""}
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Before anything \u00b7 every day</div>
+    ${WAKEUP.map(w=>`<div class="item"><div class="dot"></div><div>${w}</div></div>`).join("")}
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Today's work</div>
+    ${sess.items.map(i=>`<div class="item"><div class="dot"></div><div>${i}</div></div>`).join("")}
+    <button class="bigbtn ${done?"done":""}" onclick="toggleDone()">${done?"\u2713 Session done":"Mark session done"}</button>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Coach</div>
+    ${S.apiKey?`
+      <input id="q" placeholder="Ask anything, or leave blank for a check-in">
+      <button class="ghost" onclick="askCoach()" ${coachBusy?"disabled":""}>${coachBusy?"Thinking\u2026":"Get coaching update"}</button>
+      ${coachReply?`<div class="reply">${coachReply.replace(/</g,"&lt;")}</div>`:""}
+      <div class="note">The coach sees your phase and last 14 days each time. Deeper reviews: bring your exported data to Claude.</div>
+    `:`
+      <div style="font-size:14px;margin-top:8px;line-height:1.5">Add an API key in settings (\u2699) to enable in-app coaching, or tap below to copy your recent data and paste it into your Claude check-in chat.</div>
+      <button class="ghost" onclick="exportData()">Copy my data for check-in</button>
+    `}
+  </div>
+  <div class="savenote" id="savenote"></div>`;
+}
+
+// ============ ACTIONS ============
+function toggleSettings(){ showSettings=!showSettings; render(); }
+function setPhase(p){ S.phase=p; save(); render(); }
+function setKey(v){ S.apiKey=v.trim(); save(); }
+function logPain(v){ S.painLogs[today()]=v; save(); render(); }
+function toggleDone(){ S.sessionsDone[today()]=!S.sessionsDone[today()]; save(); render(); }
+function flash(msg){ const n=document.getElementById("savenote"); if(n){ n.textContent=msg; setTimeout(()=>{ if(n) n.textContent=""; },1200); } }
+
+function exportData(){
+  const recent = lastN(28).map(d=>({date:d, pain:S.painLogs[d]??null, sessionDone:!!S.sessionsDone[d]}));
+  const payload = `Weekly check-in data. Phase ${S.phase}, streak ${streak()} clean mornings.\n`+JSON.stringify(recent);
+  navigator.clipboard.writeText(payload).then(()=>flash("Copied \u2014 paste into your Claude chat")).catch(()=>alert(payload));
+}
+
+async function askCoach(){
+  const q=document.getElementById("q").value.trim();
+  coachBusy=true; coachReply=""; render();
+  const recent=lastN(14).map(d=>({date:d,pain:S.painLogs[d]??null,sessionDone:!!S.sessionsDone[d]}));
+  const prompt=`You are the running/rehab coach for Michael, recovering from plantar fasciitis while rebuilding toward a sub-3 marathon. His plan has 4 phases gated by next-morning foot pain (0-10). Rules: Phase 2\u21923 needs 7 consecutive pain-free mornings; run interval increases need a clean next morning; 10% weekly volume rule in Phase 4.\nCurrent phase: ${S.phase}. Streak: ${streak()}. Last 14 days: ${JSON.stringify(recent)}\n${q?`Michael asks: "${q}"`:"Give a brief check-in: assess the trend, note compliance gaps, say clearly whether to hold, advance, or ease off."}\nUnder 130 words, plain text, direct and warm.`;
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-api-key":S.apiKey,
+        "anthropic-version":"2023-06-01",
+        "anthropic-dangerous-direct-browser-access":"true"
+      },
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:400,messages:[{role:"user",content:prompt}]})
+    });
+    const data=await res.json();
+    if(data.error){ coachReply="API error: "+(data.error.message||"check your key in settings."); }
+    else coachReply=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim()||"No reply \u2014 try again.";
+  }catch(e){ coachReply="Couldn't reach the coach. Check your connection and API key."; }
+  coachBusy=false; render();
+}
+
+// ============ BOOT ============
+render();
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+</script>
+</body>
+</html>
