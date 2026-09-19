@@ -21,7 +21,7 @@
   .wrap { max-width:420px; margin:0 auto; padding:20px 16px 48px; }
   .eyebrow { font-family:var(--display); font-size:14px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--mist); }
   h1 { font-family:var(--display); font-size:40px; font-weight:700; line-height:1; text-transform:uppercase; margin-top:2px; }
-  .tagrow { margin-top:6px; display:flex; gap:8px; align-items:center; }
+  .tagrow { margin-top:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .tag { font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; background:var(--spruce); color:#fff; border-radius:4px; padding:3px 8px; }
   .phaselbl { font-size:13px; color:var(--mist); }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:14px; }
@@ -34,15 +34,25 @@
   .bigbtn.done { background:var(--clean); }
   .morning { background:var(--ink); border-radius:14px; padding:18px; margin-top:20px; color:#fff; }
   .morning .eyebrow { color:var(--amber); }
-  .painrow { display:flex; gap:5px; margin-top:12px; }
-  .painbtn { flex:1; padding:12px 0; border-radius:8px; font-weight:700; font-size:15px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06); color:rgba(255,255,255,.85); }
-  .strip { display:flex; gap:6px; margin-top:16px; align-items:center; }
-  .daydot { width:22px; height:22px; border-radius:50%; }
-  .streak { margin-left:auto; font-size:13px; color:rgba(255,255,255,.75); }
-  .gate { margin-top:12px; background:var(--clean); border-radius:8px; padding:10px 12px; font-size:13px; font-weight:600; }
+  .fieldlbl { font-size:13px; font-weight:600; color:rgba(255,255,255,.9); margin-top:16px; }
+  .fieldlbl:first-of-type { margin-top:12px; }
+  .hint { font-size:11px; color:rgba(255,255,255,.55); margin-top:2px; line-height:1.4; }
+  .grid { display:grid; gap:5px; margin-top:8px; }
+  .g6 { grid-template-columns:repeat(6,1fr); }
+  .g4 { grid-template-columns:repeat(4,1fr); }
+  .g3 { grid-template-columns:repeat(3,1fr); }
+  .pick { padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06); color:rgba(255,255,255,.85); }
+  .pick.on { border:2px solid var(--amber); color:#fff; font-weight:700; }
+  .anchor { font-size:12px; color:var(--amber); margin-top:8px; min-height:16px; line-height:1.4; }
+  .verdict { margin-top:14px; border-radius:8px; padding:11px 12px; font-size:13px; font-weight:600; line-height:1.45; display:flex; gap:8px; }
+  .verdict .vi { font-weight:700; flex-shrink:0; }
+  .v-green { background:var(--clean); color:#fff; }
+  .v-yellow { background:var(--amber); color:#3a2405; }
+  .v-red { background:var(--clay); color:#fff; }
+  .v-none { background:rgba(255,255,255,.08); color:rgba(255,255,255,.8); }
   .ghost { width:100%; margin-top:10px; padding:12px 0; border-radius:10px; border:1.5px solid var(--spruce); background:#fff; color:var(--spruce); font-family:var(--display); font-size:16px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
   input, textarea { width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); font-size:14px; font-family:var(--body); margin-top:8px; }
-  .note { font-size:11px; color:var(--mist); margin-top:10px; }
+  .note { font-size:11px; color:var(--mist); margin-top:10px; line-height:1.5; }
   .reply { margin-top:12px; background:var(--bg); border-radius:8px; padding:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
   .settings { display:none; }
   .settings.open { display:block; }
@@ -52,6 +62,21 @@
   .gear { background:none; border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--mist); font-size:13px; }
   .topbar { display:flex; justify-content:space-between; align-items:baseline; }
   .savenote { text-align:center; font-size:12px; color:var(--mist); margin-top:16px; min-height:16px; }
+  .chart { width:100%; height:auto; display:block; margin-top:10px; touch-action:manipulation; }
+  .chart rect.hit { fill:transparent; }
+  .key { display:flex; gap:12px; margin-top:8px; font-size:11px; color:var(--mist); flex-wrap:wrap; }
+  .key span { display:flex; gap:5px; align-items:center; }
+  .sw { width:9px; height:9px; border-radius:2px; display:inline-block; }
+  .detail { font-size:13px; margin-top:10px; padding:9px 11px; background:var(--bg); border-radius:8px; line-height:1.45; min-height:20px; }
+  .empty { font-size:13px; color:var(--mist); margin-top:10px; line-height:1.5; }
+  .banner { background:#fff; border:1.5px solid var(--amber); border-radius:12px; padding:14px 16px; margin-top:14px; font-size:14px; line-height:1.5; }
+  .banner b { font-family:var(--display); font-size:17px; letter-spacing:.5px; text-transform:uppercase; display:block; margin-bottom:6px; }
+  .rowbtns { display:flex; gap:8px; margin-top:12px; }
+  .minibtn { flex:1; padding:10px 0; border-radius:8px; border:1.5px solid var(--spruce); background:var(--spruce); color:#fff; font-weight:600; font-size:13px; }
+  .minibtn.alt { background:#fff; color:var(--spruce); }
+  table.tbl { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+  table.tbl th { text-align:left; color:var(--mist); font-weight:600; padding:4px 6px 4px 0; border-bottom:1px solid var(--line); }
+  table.tbl td { padding:5px 6px 5px 0; border-bottom:1px solid var(--line); }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -59,144 +84,433 @@
 <div class="wrap" id="app"></div>
 
 <script>
-// ============ THE PLAN (data only — edit this, not the logic) ============
-const WAKEUP = ["Band calf stretch 3\u00d730s per foot","Toe curls + spreads \u00d715","Ankle circles \u00d710 each way"];
+// ============================================================================
+// THE PLAN (data only — edit this, not the logic)
+// ============================================================================
+const WAKEUP = [
+  "Before the first step: 20 ankle pumps + 10 toe curls in bed",
+  "Band calf stretch 3×30s per foot",
+  "Toe spreads ×15 · ankle circles ×10 each way"
+];
+
+// Loading = the fascia's actual repair stimulus. Progress the WEIGHT, not the reps.
+const LOADING_NOTE = "Add load (backpack) until the last 2 reps are genuinely hard. Comfortable sets are not a treatment.";
+
+// --- The 8-week base-rebuild run progression -------------------------------
+// Advanced by the morning-check gate, NOT by the calendar. minutes = run time
+// per session. Weekly totals (2 runs): 16 24 30 32 40 48 54 56.
+const RUN_BLOCK = [
+  { wk:1, reps:8, run:1,  walk:2, third:false, note:"Deliberately easy. If it feels too slow, it's correct." },
+  { wk:2, reps:6, run:2,  walk:2, third:false, note:"Same effort, longer reps. Do not push pace." },
+  { wk:3, reps:5, run:3,  walk:2, third:false, note:"First week the runs feel like running." },
+  { wk:4, reps:4, run:4,  walk:2, third:false, note:"Consolidation week — only +1 min. Let tissue catch up." },
+  { wk:5, reps:4, run:5,  walk:2, third:true,  note:"Optional 3rd run unlocks — only if every morning was green." },
+  { wk:6, reps:3, run:8,  walk:2, third:true,  note:"Long reps now. Conversational pace throughout." },
+  { wk:7, reps:3, run:9,  walk:1, third:true,  note:"Walk breaks shorten. This is the real test of the fascia." },
+  { wk:8, reps:2, run:14, walk:2, third:true,  note:"Two long reps — next block is continuous running." }
+];
+const runSpec = w => RUN_BLOCK[Math.min(Math.max(w,1),RUN_BLOCK.length)-1];
+const runMinutes = w => { const b=runSpec(w); return b.reps*b.run; };
+
+function runDayItems(w, isThird){
+  const b = runSpec(w);
+  return [
+    "10-min brisk walk warm-up",
+    `${b.reps} × (${b.run} min easy run / ${b.walk} min walk)` + (isThird?" — optional 3rd run, same as this week":""),
+    "5-min walk cool-down",
+    `Soft surface · flat · no speed work · ${runMinutes(w)} min of running total`,
+    b.note
+  ];
+}
+
 const PLAN = {
- 1:{label:"Phase 1 \u00b7 Rebuild the base",gate:"Two-leg calf raises feel easy (\u22643/10)",days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Two-leg towel calf raises 3\u00d712 (3s up \u00b7 2s hold \u00b7 3s down)","Goblet squats 3\u00d710","Single-leg RDL (bodyweight) 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d715/side"]},
-  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex: 8 rows \u2192 8 squats \u2192 8 presses per side \u00b7 4 rounds \u00b7 90s rest","Brisk 15-min walk if foot allows"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","Single-leg glute bridges 3\u00d712/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["Goblet squats 3\u00d710","KB press 3\u00d78/side","KB deadlift 3\u00d710","Banded clamshells 3\u00d715/side","Suitcase carry 3\u00d730s/side"]},
-  Fri:{title:"Loading + easy conditioning",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","20-min brisk walk or KB complex \u00d73 rounds"]},
+ 1:{label:"Phase 1 · Settle & load",gate:"Walking is comfortable and loaded calf raises don't sting",run:false,days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Two-leg towel calf raises 3×12 (3s up · 2s hold · 3s down)","Goblet squats 3×10","Single-leg RDL (bodyweight) 3×8/side","KB row 3×10/side","Banded side steps 3×15/side"]},
+  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex: 8 rows → 8 squats → 8 presses per side · 4 rounds · 90s rest","Brisk 15-min walk if foot allows"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3×12",LOADING_NOTE,"Single-leg glute bridges 3×12/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["Goblet squats 3×10","KB press 3×8/side","KB deadlift 3×10","Banded clamshells 3×15/side","Suitcase carry 3×30s/side"]},
+  Fri:{title:"Loading + easy conditioning",type:"Loading",items:["Two-leg towel calf raises 3×12","20-min brisk walk or KB complex ×3 rounds"]},
   Sat:{title:"Rest",type:"Rest",items:["Wake-up routine only"]},
-  Sun:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3\u00d712","Glute bridges 3\u00d712/side"]}}},
- 2:{label:"Phase 2 \u00b7 Single-leg loading",gate:"7 straight pain-free mornings unlocks Phase 3",days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg towel calf raises 3\u00d78/side","Goblet squats 3\u00d710 (heavier)","Single-leg RDL + light KB 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d715/side"]},
-  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex \u00b7 4 rounds","Brisk walk 15\u201320 min"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Single-leg towel calf raises 3\u00d78/side","Single-leg glute bridges 3\u00d712/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 3\u00d710 (heavier)","Goblet squat 3\u00d710","Banded clamshells 3\u00d715/side","Suitcase carry 3\u00d730s/side"]},
-  Fri:{title:"Loading + conditioning",type:"Loading",items:["Single-leg towel calf raises 3\u00d78/side","KB complex \u00d73 or 20-min walk"]},
-  Sat:{title:"Active recovery",type:"Rest",items:["30\u201345 min walk \u00b7 flat, soft ground"]},
-  Sun:{title:"Loading only",type:"Loading",items:["Single-leg calf raises 3\u00d78/side","Glute bridges 3\u00d712/side"]}}},
- 3:{label:"Phase 3 \u00b7 Weighted loading + walk-run",gate:"Every run interval increase needs a clean next morning",days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg calf raises + light KB 3\u00d78/side","Goblet squats 4\u00d78 (heavier)","KB single-leg RDL 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d720/side"]},
-  Tue:{title:"Walk-Run",type:"Run",items:["10-min walk warm-up","1 min easy run / 2 min walk \u00d7 8","5-min walk cool-down","Soft surface \u00b7 flat \u00b7 no speed"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3\u00d78/side","Single-leg banded glute bridges 3\u00d712/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 4\u00d78","Goblet squat 3\u00d710","Clamshells 3\u00d720/side","Carries 3\u00d740s/side"]},
-  Fri:{title:"Walk-Run",type:"Run",items:["Same as Tuesday","If last run's next morning was clean: +30s per run interval"]},
-  Sat:{title:"Conditioning",type:"Conditioning",items:["KB complex 4\u20135 rounds, or 45-min walk"]},
-  Sun:{title:"Rest",type:"Rest",items:["Wake-up routine only"]}}},
- 4:{label:"Phase 4 \u00b7 Building run volume",gate:"\u226410% weekly run-time increase \u00b7 mornings stay clean",days:{
-  Mon:{title:"Strength A",type:"Strength",items:["Weighted single-leg calf raises 3\u00d78/side (heavier)","Goblet squats 4\u00d78","KB single-leg RDL 3\u00d78/side","KB row 3\u00d710/side","Banded side steps 3\u00d720/side"]},
-  Tue:{title:"Run",type:"Run",items:["3 min run / 1 min walk \u00d7 6","Progress toward 20 min continuous"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3\u00d78/side","Glute work 3\u00d712/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3\u00d78/side","KB deadlift 4\u00d78","Goblet squat 3\u00d710","Clamshells + carries"]},
-  Fri:{title:"Run",type:"Run",items:["Same progression as Tuesday"]},
-  Sat:{title:"Optional easy run or long walk",type:"Run",items:["Only add a 3rd run in week 8+, only if all morning checks are clean"]},
+  Sun:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3×12","Glute bridges 3×12/side"]}}},
+
+ 2:{label:"Phase 2 · Build capacity",gate:"15+ single-leg heel raises and 10 pain-free single-leg hops",run:false,days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg towel calf raises 3×8/side",LOADING_NOTE,"Goblet squats 3×10 (heavier)","Single-leg RDL + light KB 3×8/side","KB row 3×10/side"]},
+  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex · 4 rounds","Brisk walk 20–30 min"]},
+  Wed:{title:"Loading + hops",type:"Loading",items:["Single-leg towel calf raises 3×8/side","Two-leg pogo hops 3×20 (soft, quiet landings)","Single-leg glute bridges 3×12/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 3×10 (heavier)","Goblet squat 3×10","Banded clamshells 3×15/side","Suitcase carry 3×30s/side"]},
+  Fri:{title:"Loading + conditioning",type:"Loading",items:["Single-leg towel calf raises 3×8/side","Single-leg hops 3×10/side if two-leg is clean","KB complex ×3 or 30-min walk"]},
+  Sat:{title:"Active recovery",type:"Rest",items:["30–45 min walk · flat, soft ground"]},
+  Sun:{title:"Loading only",type:"Loading",items:["Single-leg calf raises 3×8/side","Glute bridges 3×12/side"]}}},
+
+ 3:{label:"Phase 3 · Base rebuild (walk-run)",gate:"Finish Week 8, then move to continuous running",run:true,days:{
+  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg weighted calf raises 3×8/side (3·2·3 tempo)",LOADING_NOTE,"Goblet squats 4×8","KB single-leg RDL 3×8/side","Banded side steps 3×20/side"]},
+  Tue:{title:"Walk-Run",type:"Run",items:[]},
+  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3×8/side","Single-leg banded glute bridges 3×12/side","Keep this easy — it sits between two run days"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 4×8","Goblet squat 3×10","Clamshells 3×20/side","Carries 3×40s/side"]},
+  Fri:{title:"Walk-Run",type:"Run",items:[]},
+  Sat:{title:"Conditioning",type:"Conditioning",items:["KB complex 4–5 rounds, or 45-min walk"]},
+  Sun:{title:"Optional 3rd run",type:"Run",items:[]}}},
+
+ 4:{label:"Phase 4 · Continuous base",gate:"≤10% weekly increase once you're past 40 min/week",run:true,days:{
+  Mon:{title:"Strength A",type:"Strength",items:["Weighted single-leg calf raises 4×8/side (heavier)",LOADING_NOTE,"Goblet squats 4×8","KB single-leg RDL 3×8/side","Banded side steps 3×20/side"]},
+  Tue:{title:"Easy run",type:"Run",items:["Continuous easy running · conversational pace","Build toward 40 min","Cadence cue: quick, quiet steps — aim ~5% above your old cadence"]},
+  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3×8/side","Glute work 3×12/side"]},
+  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 4×8","Goblet squat 3×10","Clamshells + carries"]},
+  Fri:{title:"Easy run",type:"Run",items:["Continuous easy running","Same duration as Tuesday until the weekly step-up"]},
+  Sat:{title:"Long easy run",type:"Run",items:["Longest run of the week · all easy","Cap the weekly increase at 10% of total running time"]},
   Sun:{title:"Rest",type:"Rest",items:["Wake-up routine only"]}}}
 };
 
-// ============ STATE ============
+// ============================================================================
+// STATE  (schema-versioned — migrate(), never trust old shapes)
+// ============================================================================
 const KEY = "pf-coach-state";
+const SCHEMA = 2;
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+const PAIN_ANCHORS = {
+  0:"Nothing at all.",
+  1:"You notice it. No change to how you move.",
+  2:"You notice it. No change to how you move.",
+  3:"Noticeable — but you'd still walk normally in front of someone.",
+  4:"You alter your gait without meaning to.",
+  5:"You alter your gait without meaning to.",
+  6:"You limp deliberately. You're thinking about it constantly.",
+  7:"You limp deliberately. You're thinking about it constantly.",
+  8:"You avoid putting weight on it.",
+  9:"You avoid putting weight on it.",
+  10:"You avoid putting weight on it."
+};
+const STIFF_OPTS = [0,2,5,10,15,20,30,45];
+const LOADS = [["rest","Rest"],["strength","Strength"],["run","Run"]];
+
 const iso = d => { const t=new Date(d); t.setMinutes(t.getMinutes()-t.getTimezoneOffset()); return t.toISOString().slice(0,10); };
 const today = () => iso(new Date());
 
-function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || def(); } catch { return def(); } }
-function def(){ return { phase:1, painLogs:{}, sessionsDone:{}, apiKey:"", started:today() }; }
+function def(){ return { v:SCHEMA, phase:3, runWeek:1, logs:{}, sessionsDone:{}, apiKey:"", started:today(), seenIntro:false }; }
+
+// Migration: v1 stored logs as painLogs{date:number}. Any schema change goes
+// here so an installed PWA upgrading in place never loses or misreads data.
+function migrate(raw){
+  if(!raw || typeof raw!=="object") return def();
+  const s = Object.assign(def(), raw);
+  if(!raw.v || raw.v < 2){
+    s.logs = {};
+    const old = raw.painLogs || {};
+    for(const d of Object.keys(old)){
+      const v = old[d];
+      if(typeof v === "number") s.logs[d] = { pain:v, stiff:null, prev:null };
+    }
+    delete s.painLogs;
+    s.phase = 3;        // cleared to start walk-run: low irritability, comfortable walking
+    s.runWeek = 1;
+    s.seenIntro = false;
+  }
+  s.v = SCHEMA;
+  if(!s.logs || typeof s.logs!=="object") s.logs = {};
+  return s;
+}
+
+// Persist the migration immediately. If we only wrote on the next save(), an
+// upgraded install would keep the old blob on disk until the user tapped
+// something — and a half-migrated store is the kind of bug you find in March.
+function load(){
+  let raw = null;
+  try { raw = JSON.parse(localStorage.getItem(KEY)); } catch { raw = null; }
+  const s = migrate(raw);
+  if(!raw || raw.v !== SCHEMA){ try { localStorage.setItem(KEY, JSON.stringify(s)); } catch {} }
+  return s;
+}
 let S = load();
 function save(){ localStorage.setItem(KEY, JSON.stringify(S)); flash("Saved"); }
 
+// ============================================================================
+// ANALYSIS — the gate
+// ============================================================================
 function lastN(n){ const out=[]; for(let i=n-1;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); out.push(iso(d)); } return out; }
-function streak(){ let s=0; for(let i=0;;i++){ const d=new Date(); d.setDate(d.getDate()-i); const v=S.painLogs[iso(d)]; if(v===undefined){ if(i===0) continue; break; } if(v===0) s++; else break; } return s; }
-const painColor = v => v==null ? "var(--line)" : v===0 ? "var(--clean)" : v<=3 ? "var(--amber)" : "var(--clay)";
+function median(a){ if(!a.length) return null; const s=[...a].sort((x,y)=>x-y); const m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
 
-// ============ RENDER ============
-let showSettings=false, coachReply="", coachBusy=false;
+// Baseline = typical morning stiffness after a NON-running day. Everything is
+// judged against this, not against zero — the number that matters is whether
+// running made the morning worse than your own normal.
+function baseline(){
+  const v = lastN(21).map(d=>S.logs[d]).filter(e=>e && e.stiff!=null && e.prev && e.prev!=="run").map(e=>e.stiff);
+  return v.length>=3 ? median(v) : null;
+}
+
+// A morning only gets a verdict if it followed a run.
+function verdict(e){
+  if(!e || e.prev!=="run" || e.pain==null) return null;
+  const b = baseline();
+  if(b==null) return "unknown";
+  if(e.pain>=6 || (e.stiff!=null && e.stiff > b+10)) return "red";
+  if(e.pain>=4 || (e.stiff!=null && e.stiff > b+5))  return "yellow";
+  return "green";
+}
+function recentVerdicts(n){ return lastN(n).map(d=>verdict(S.logs[d])).filter(Boolean); }
+
+function recommendation(){
+  const b = baseline();
+  const logged = lastN(14).filter(d=>S.logs[d] && S.logs[d].pain!=null).length;
+  if(logged < 3) return { cls:"v-none", icon:"○", text:"Log three mornings — including at least one rest-day morning — before the gate can say anything useful." };
+  if(b==null) return { cls:"v-none", icon:"○", text:"Need 3 non-run mornings to set your baseline. Keep logging." };
+  const v = recentVerdicts(10);
+  const last3 = v.slice(-3);
+  if(last3.includes("red"))
+    return { cls:"v-red", icon:"✕", text:`Red. Drop back to Week ${Math.max(1,S.runWeek-1)} and hold there until two clean post-run mornings. Baseline ${b}m.` };
+  if(last3.filter(x=>x==="yellow").length>=2)
+    return { cls:"v-yellow", icon:"△", text:`Yellow. Repeat Week ${S.runWeek} — do not add time. Baseline ${b}m.` };
+  const greens = v.slice(-2).filter(x=>x==="green").length;
+  if(greens>=2 && S.runWeek < RUN_BLOCK.length)
+    return { cls:"v-green", icon:"✓", text:`Green ×2. Cleared for Week ${S.runWeek+1} — ${runMinutes(S.runWeek+1)} min of running per session. Baseline ${b}m.` };
+  if(greens>=2 && S.runWeek >= RUN_BLOCK.length)
+    return { cls:"v-green", icon:"✓", text:`Green ×2 at Week 8. You're ready for Phase 4 — continuous running. Baseline ${b}m.` };
+  return { cls:"v-none", icon:"○", text:`Holding at Week ${S.runWeek}. Two green post-run mornings unlock the next step. Baseline ${b}m.` };
+}
+
+// ============================================================================
+// CHART — 14-day stiffness trend
+// Height = minutes of morning stiffness. Color = that morning's pain band.
+// Tick under a bar = you ran the day before. Dashed rule = your baseline.
+// ============================================================================
+const painBand = p => p==null ? null : p<=3 ? "clean" : p<=5 ? "warn" : "bad";
+const BAND_COLOR = { clean:"var(--clean)", warn:"var(--amber)", bad:"var(--clay)" };
+const barPath = (x,y,w,h,r) => { r=Math.min(r,w/2,h); return `M${x},${y+h} L${x},${y+r} Q${x},${y} ${x+r},${y} L${x+w-r},${y} Q${x+w},${y} ${x+w},${y+r} L${x+w},${y+h} Z`; };
+
+function trendChart(){
+  const days = lastN(14);
+  const have = days.map(d=>S.logs[d]).filter(e=>e && e.stiff!=null);
+  if(have.length < 2) return `<div class="empty">Log two mornings and your stiffness trend appears here. Minutes-to-loosen is the metric that moves first — usually before the pain score budges.</div>`;
+
+  const b = baseline();
+  // GUT reserves a right-hand gutter for the baseline label so it can never
+  // collide with a bar's direct label. Cheaper than collision detection.
+  const W=340, GUT=52, PW=W-GUT, H=118, TOP=14, BASE=H-22, PLOT=BASE-TOP, GAP=3;
+  const bw = (PW - GAP*(days.length-1))/days.length;
+  const max = Math.max(10, ...have.map(e=>e.stiff), b!=null?b+6:0);
+  const y = v => BASE - (v/max)*PLOT;
+
+  // Label only two bars: the most recent, and the peak. Never every point.
+  const peak = Math.max(...have.map(z=>z.stiff));
+  const labelIdx = new Set([days.length-1]);
+  for(let i=0;i<days.length;i++){ const e=S.logs[days[i]]; if(e && e.stiff===peak){ labelIdx.add(i); break; } }
+
+  let bars="", ticks="", hits="", labels="";
+  days.forEach((d,i)=>{
+    const e = S.logs[d], x = i*(bw+GAP);
+    if(e && e.stiff!=null){
+      const band = painBand(e.pain) || "clean";
+      const h = Math.max(2, BASE - y(e.stiff));
+      bars += `<path d="${barPath(x, BASE-h, bw, h, 4)}" fill="${BAND_COLOR[band]}"></path>`;
+      if(labelIdx.has(i))
+        labels += `<text x="${x+bw/2}" y="${BASE-h-4}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--ink)">${e.stiff}</text>`;
+    } else {
+      bars += `<rect x="${x}" y="${BASE-2}" width="${bw}" height="2" rx="1" fill="var(--line)"></rect>`;
+    }
+    if(e && e.prev==="run") ticks += `<circle cx="${x+bw/2}" cy="${BASE+7}" r="2.5" fill="var(--spruce)"></circle>`;
+    hits += `<rect class="hit" x="${x}" y="0" width="${bw}" height="${H}" onclick="pickDay('${d}')"></rect>`;
+  });
+
+  const bline = b==null ? "" :
+    `<line x1="0" y1="${y(b)}" x2="${PW+4}" y2="${y(b)}" stroke="var(--mist)" stroke-width="1.5" stroke-dasharray="4 3"></line>
+     <text x="${PW+8}" y="${y(b)-1}" font-size="10" fill="var(--mist)">base</text>
+     <text x="${PW+8}" y="${y(b)+10}" font-size="10" font-weight="600" fill="var(--ink)">${b}m</text>`;
+
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Morning stiffness in minutes over the last 14 days">
+    <line x1="0" y1="${BASE}" x2="${PW}" y2="${BASE}" stroke="var(--line)" stroke-width="1"></line>
+    ${bline}${bars}${labels}${ticks}${hits}
+  </svg>
+  <div class="key">
+    <span><i class="sw" style="background:var(--clean)"></i>pain ≤3</span>
+    <span><i class="sw" style="background:var(--amber)"></i>4–5</span>
+    <span><i class="sw" style="background:var(--clay)"></i>6+</span>
+    <span><i class="sw" style="background:var(--spruce);border-radius:50%"></i>ran the day before</span>
+  </div>`;
+}
+
+function recentTable(){
+  const rows = lastN(10).slice().reverse().map(d=>{
+    const e=S.logs[d]; if(!e) return "";
+    const v=verdict(e);
+    return `<tr><td>${d.slice(5)}</td><td>${e.stiff!=null?e.stiff+"m":"—"}</td><td>${e.pain!=null?e.pain:"—"}</td><td>${e.prev||"—"}</td><td>${v&&v!=="unknown"?v:""}</td></tr>`;
+  }).join("");
+  if(!rows) return "";
+  return `<table class="tbl"><thead><tr><th>Date</th><th>Stiff</th><th>Pain</th><th>Prev day</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ============================================================================
+// RENDER
+// ============================================================================
+let showSettings=false, showTable=false, coachReply="", coachBusy=false, picked=null;
+
+function todaySession(){
+  const dk = DAYS[new Date().getDay()];
+  const ph = PLAN[S.phase];
+  const sess = Object.assign({}, ph.days[dk]);
+  if(ph.run && sess.type==="Run" && sess.items.length===0){
+    const isThird = dk==="Sun";
+    if(isThird && !runSpec(S.runWeek).third){
+      return { title:"Rest", type:"Rest", items:["Wake-up routine only","The optional 3rd run unlocks at Week 5."] };
+    }
+    sess.title = `Walk-Run · Week ${S.runWeek}`;
+    sess.items = runDayItems(S.runWeek, isThird);
+  }
+  return sess;
+}
 
 function render(){
-  const now=new Date(), dk=DAYS[now.getDay()], ph=PLAN[S.phase], sess=ph.days[dk];
-  const t=today(), pain=S.painLogs[t], done=!!S.sessionsDone[t], st=streak();
-  const gateMet = st>=7 && S.phase===2;
+  const now=new Date(), ph=PLAN[S.phase], sess=todaySession();
+  const t=today(), e=S.logs[t]||{}, done=!!S.sessionsDone[t];
+  const rec = recommendation();
   const app=document.getElementById("app");
+
   app.innerHTML = `
   <div class="topbar">
     <div>
       <div class="eyebrow">${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</div>
       <h1>${sess.title}</h1>
     </div>
-    <button class="gear" onclick="toggleSettings()" aria-label="Settings">\u2699</button>
+    <button class="gear" onclick="toggleSettings()" aria-label="Settings">⚙</button>
   </div>
-  <div class="tagrow"><span class="tag">${sess.type}</span><span class="phaselbl">${ph.label}</span></div>
+  <div class="tagrow">
+    <span class="tag">${sess.type}</span>
+    <span class="phaselbl">${ph.label}</span>
+    ${ph.run?`<span class="phaselbl">· ${runMinutes(S.runWeek)} min/run</span>`:""}
+  </div>
+
+  ${!S.seenIntro?`
+  <div class="banner">
+    <b>What changed</b>
+    The old gate waited for seven pain-free mornings. With plantar fascia that can mean waiting forever — so it's gone. The new rule compares each post-run morning to your own rest-day baseline. You start running now, at Week 1, and the app decides when you step up.
+    <div class="rowbtns"><button class="minibtn" onclick="dismissIntro()">Got it</button></div>
+  </div>`:""}
 
   <div class="card settings ${showSettings?"open":""}">
-    <div style="font-size:13px;font-weight:600">Phase (only change at a gate)</div>
+    <div style="font-size:13px;font-weight:600">Phase</div>
     <div class="phasebtns">${[1,2,3,4].map(p=>`<button class="phasebtn ${S.phase===p?"on":""}" onclick="setPhase(${p})">${p}</button>`).join("")}</div>
-    <div class="note">Gate: ${ph.gate}</div>
-    <div style="font-size:13px;font-weight:600;margin-top:14px">Anthropic API key (optional \u2014 powers the coach)</div>
+    <div class="note">${ph.label} — gate: ${ph.gate}</div>
+    ${ph.run?`
+    <div style="font-size:13px;font-weight:600;margin-top:14px">Run week (${S.runWeek} of 8 · ${runMinutes(S.runWeek)} min/session)</div>
+    <div class="rowbtns">
+      <button class="minibtn alt" onclick="stepWeek(-1)">− Back a week</button>
+      <button class="minibtn" onclick="stepWeek(1)">Advance a week +</button>
+    </div>
+    <div class="note">Only advance when the gate says green. Stepping back after a red morning is the plan working, not a failure.</div>`:""}
+    <div style="font-size:13px;font-weight:600;margin-top:14px">Anthropic API key (optional — powers the coach)</div>
     <input type="password" value="${S.apiKey||""}" placeholder="sk-ant-..." onchange="setKey(this.value)">
-    <div class="note">Stored only on this device. Get one at console.anthropic.com. Without it, use your weekly check-in chat instead.</div>
+    <div class="note">Stored only on this device. Get one at console.anthropic.com.</div>
     <button class="ghost" onclick="exportData()">Copy my data (for weekly check-in)</button>
   </div>
 
   <div class="morning">
-    <div class="eyebrow">Morning check \u2014 how's the foot?</div>
-    <div class="painrow">${[0,1,2,3,4,5,6,7].map(v=>`
-      <button class="painbtn" aria-label="Pain ${v}" onclick="logPain(${v})"
-        style="${pain===v?`background:${painColor(v)};border:2px solid var(--amber);color:#fff;`:""}">${v===7?"7+":v}</button>`).join("")}
+    <div class="eyebrow">Morning check</div>
+
+    <div class="fieldlbl">1 · Minutes to loosen up</div>
+    <div class="hint">First step out of bed until it feels normal. This is the number that moves first.</div>
+    <div class="grid g4">${STIFF_OPTS.map(v=>`
+      <button class="pick ${e.stiff===v?"on":""}" onclick="logField('stiff',${v})">${v===45?"45+":v+"m"}</button>`).join("")}
     </div>
-    <div class="strip">
-      ${lastN(7).map(d=>`<div class="daydot" title="${d}" style="background:${painColor(S.painLogs[d])};${d===t?"border:2px solid var(--amber);":""}"></div>`).join("")}
-      <div class="streak">${st} clean ${st===1?"morning":"mornings"}</div>
+
+    <div class="fieldlbl">2 · First-step pain</div>
+    <div class="grid g6">${[0,1,2,3,4,5,6,7,8,9,10].map(v=>`
+      <button class="pick ${e.pain===v?"on":""}" onclick="logField('pain',${v})">${v}</button>`).join("")}
     </div>
-    ${gateMet?`<div class="gate">Gate met: 7 pain-free mornings. You're cleared for Phase 3 \u2014 walk-run begins.</div>`:""}
+    <div class="anchor">${e.pain!=null?PAIN_ANCHORS[e.pain]:"Tap a number to see what it means."}</div>
+
+    <div class="fieldlbl">3 · Yesterday</div>
+    <div class="grid g3">${LOADS.map(([k,lbl])=>`
+      <button class="pick ${e.prev===k?"on":""}" onclick="logField('prev','${k}')">${lbl}</button>`).join("")}
+    </div>
+
+    <div class="verdict ${rec.cls}"><span class="vi">${rec.icon}</span><span>${rec.text}</span></div>
   </div>
 
   <div class="card">
-    <div class="eyebrow">Before anything \u00b7 every day</div>
+    <div class="eyebrow">Stiffness trend · 14 days</div>
+    ${trendChart()}
+    <div class="detail">${picked ? dayDetail(picked) : "Tap a bar for that day. Flat or falling over two weeks is progress — single bad mornings are noise."}</div>
+    <button class="ghost" onclick="toggleTable()">${showTable?"Hide the numbers":"Show the numbers"}</button>
+    ${showTable?recentTable():""}
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">Before anything · every day</div>
     ${WAKEUP.map(w=>`<div class="item"><div class="dot"></div><div>${w}</div></div>`).join("")}
   </div>
 
   <div class="card">
     <div class="eyebrow">Today's work</div>
     ${sess.items.map(i=>`<div class="item"><div class="dot"></div><div>${i}</div></div>`).join("")}
-    <button class="bigbtn ${done?"done":""}" onclick="toggleDone()">${done?"\u2713 Session done":"Mark session done"}</button>
+    <button class="bigbtn ${done?"done":""}" onclick="toggleDone()">${done?"✓ Session done":"Mark session done"}</button>
   </div>
 
   <div class="card">
     <div class="eyebrow">Coach</div>
     ${S.apiKey?`
       <input id="q" placeholder="Ask anything, or leave blank for a check-in">
-      <button class="ghost" onclick="askCoach()" ${coachBusy?"disabled":""}>${coachBusy?"Thinking\u2026":"Get coaching update"}</button>
+      <button class="ghost" onclick="askCoach()" ${coachBusy?"disabled":""}>${coachBusy?"Thinking…":"Get coaching update"}</button>
       ${coachReply?`<div class="reply">${coachReply.replace(/</g,"&lt;")}</div>`:""}
-      <div class="note">The coach sees your phase and last 14 days each time. Deeper reviews: bring your exported data to Claude.</div>
+      <div class="note">The coach sees your phase, run week, baseline and last 14 days.</div>
     `:`
-      <div style="font-size:14px;margin-top:8px;line-height:1.5">Add an API key in settings (\u2699) to enable in-app coaching, or tap below to copy your recent data and paste it into your Claude check-in chat.</div>
+      <div style="font-size:14px;margin-top:8px;line-height:1.5">Add an API key in settings (⚙) to enable in-app coaching, or tap below to copy your recent data into your Claude check-in chat.</div>
       <button class="ghost" onclick="exportData()">Copy my data for check-in</button>
     `}
   </div>
   <div class="savenote" id="savenote"></div>`;
 }
 
-// ============ ACTIONS ============
+function dayDetail(d){
+  const e=S.logs[d]; if(!e) return `${d} — nothing logged.`;
+  const v=verdict(e);
+  const bits=[`${e.stiff!=null?e.stiff+" min to loosen":"stiffness not logged"}`,`pain ${e.pain!=null?e.pain:"—"}`,`after a ${e.prev||"?"} day`];
+  return `<b>${d}</b> · ${bits.join(" · ")}${v&&v!=="unknown"?` — <b>${v}</b>`:""}`;
+}
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
 function toggleSettings(){ showSettings=!showSettings; render(); }
+function toggleTable(){ showTable=!showTable; render(); }
+function dismissIntro(){ S.seenIntro=true; save(); render(); }
 function setPhase(p){ S.phase=p; save(); render(); }
+function stepWeek(n){ S.runWeek=Math.min(RUN_BLOCK.length,Math.max(1,S.runWeek+n)); save(); render(); }
 function setKey(v){ S.apiKey=v.trim(); save(); }
-function logPain(v){ S.painLogs[today()]=v; save(); render(); }
+function pickDay(d){ picked=d; render(); }
+function logField(k,v){ const t=today(); S.logs[t]=Object.assign({pain:null,stiff:null,prev:null},S.logs[t],{[k]:v}); save(); render(); }
 function toggleDone(){ S.sessionsDone[today()]=!S.sessionsDone[today()]; save(); render(); }
 function flash(msg){ const n=document.getElementById("savenote"); if(n){ n.textContent=msg; setTimeout(()=>{ if(n) n.textContent=""; },1200); } }
 
+function snapshot(n){
+  return lastN(n).map(d=>{
+    const e=S.logs[d]; if(!e) return {date:d};
+    return {date:d, stiffMin:e.stiff, pain:e.pain, prevDay:e.prev, verdict:verdict(e)||undefined, sessionDone:!!S.sessionsDone[d]};
+  });
+}
+
 function exportData(){
-  const recent = lastN(28).map(d=>({date:d, pain:S.painLogs[d]??null, sessionDone:!!S.sessionsDone[d]}));
-  const payload = `Weekly check-in data. Phase ${S.phase}, streak ${streak()} clean mornings.\n`+JSON.stringify(recent);
-  navigator.clipboard.writeText(payload).then(()=>flash("Copied \u2014 paste into your Claude chat")).catch(()=>alert(payload));
+  const payload = `Morning Coach check-in.
+Phase ${S.phase} (${PLAN[S.phase].label}) | Run week ${S.runWeek}/8 = ${runMinutes(S.runWeek)} min running per session
+Rest-day stiffness baseline: ${baseline()??"not enough data"} min
+Gate says: ${recommendation().text}
+Last 28 days (stiffMin = minutes to loosen in the morning, pain = first-step 0-10, prevDay = what I did the day before):
+` + JSON.stringify(snapshot(28));
+  navigator.clipboard.writeText(payload).then(()=>flash("Copied — paste into your Claude chat")).catch(()=>alert(payload));
 }
 
 async function askCoach(){
   const q=document.getElementById("q").value.trim();
   coachBusy=true; coachReply=""; render();
-  const recent=lastN(14).map(d=>({date:d,pain:S.painLogs[d]??null,sessionDone:!!S.sessionsDone[d]}));
-  const prompt=`You are the running/rehab coach for Michael, recovering from plantar fasciitis while rebuilding toward a sub-3 marathon. His plan has 4 phases gated by next-morning foot pain (0-10). Rules: Phase 2\u21923 needs 7 consecutive pain-free mornings; run interval increases need a clean next morning; 10% weekly volume rule in Phase 4.\nCurrent phase: ${S.phase}. Streak: ${streak()}. Last 14 days: ${JSON.stringify(recent)}\n${q?`Michael asks: "${q}"`:"Give a brief check-in: assess the trend, note compliance gaps, say clearly whether to hold, advance, or ease off."}\nUnder 130 words, plain text, direct and warm.`;
+  const prompt=`You are the running/rehab coach for Michael, rebuilding running base after plantar fasciitis, long-term goal sub-3 marathon.
+
+The plan: 4 phases. Phase 3 is an 8-week walk-run base rebuild, 2 runs/week (optional 3rd from week 5), advanced by a pain-monitoring gate, not the calendar.
+
+The gate: each morning he logs minutes-to-loosen (stiffness), first-step pain 0-10, and what he did the day before. Baseline = median stiffness after NON-running days. A post-run morning is GREEN if pain<=3 and stiffness<=baseline+5; YELLOW if pain 4-5 or stiffness baseline+5..+10; RED if pain>=6 or stiffness>baseline+10. Two greens unlock the next week. Two yellows = repeat the week. Any red = drop back a week.
+
+Current: phase ${S.phase}, run week ${S.runWeek}/8 (${runMinutes(S.runWeek)} min running per session), baseline ${baseline()??"unknown"} min.
+Last 14 days: ${JSON.stringify(snapshot(14))}
+${q?`Michael asks: "${q}"`:"Give a brief check-in: read the stiffness trend, note logging gaps, and say clearly whether to hold, advance, or step back."}
+
+Under 140 words, plain text, direct and warm. Judge trend over single days.`;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
@@ -210,12 +524,14 @@ async function askCoach(){
     });
     const data=await res.json();
     if(data.error){ coachReply="API error: "+(data.error.message||"check your key in settings."); }
-    else coachReply=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim()||"No reply \u2014 try again.";
+    else coachReply=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim()||"No reply — try again.";
   }catch(e){ coachReply="Couldn't reach the coach. Check your connection and API key."; }
   coachBusy=false; render();
 }
 
-// ============ BOOT ============
+// ============================================================================
+// BOOT
+// ============================================================================
 render();
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
