@@ -87,6 +87,14 @@
   .sday.hard b { color:#fff; }
   .sday.now { outline:2px solid var(--amber); outline-offset:1px; }
   .weeknote { font-size:13px; margin-top:10px; line-height:1.45; }
+  .coachnote { background:#fff; border-left:4px solid var(--amber); border-radius:10px; padding:12px 14px; margin-top:14px; font-size:14px; line-height:1.5; white-space:pre-wrap; }
+  .coachnote .eyebrow { font-size:12px; margin-bottom:4px; }
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+  .stat { background:var(--bg); border-radius:8px; padding:8px 10px; }
+  .stat .lbl { font-size:11px; color:var(--mist); }
+  .stat .val { font-family:var(--display); font-size:24px; font-weight:700; line-height:1.1; }
+  .stat .cmp { font-size:11px; color:#3d4f49; }
+  .syncline { font-size:11px; color:var(--mist); margin-top:6px; line-height:1.4; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -149,7 +157,8 @@ const LOADS = [["rest","Rest"],["strength","Strength"],["run","Run"]];
 const iso = d => { const t=new Date(d); t.setMinutes(t.getMinutes()-t.getTimezoneOffset()); return t.toISOString().slice(0,10); };
 const today = () => iso(new Date());
 
-function def(){ return { v:SCHEMA, step:1, rtrDone:false, lag:0, race:"chicago", logs:{}, sessionsDone:{}, apiKey:"", started:today(), seenIntro:false }; }
+function def(){ return { v:SCHEMA, step:1, rtrDone:false, lag:0, race:"chicago", logs:{}, sessionsDone:{}, apiKey:"", started:today(), seenIntro:false,
+  sync:{ url:"", token:"" }, syncPending:false, syncStatus:null, remote:null }; }
 
 // Migrations run in order, one schema step at a time. A phone that skipped an
 // update (v1 → v3) walks through every step instead of needing a special case.
@@ -191,7 +200,7 @@ function load(){
   return s;
 }
 let S = load();
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); flash("Saved"); } catch { flash("Couldn't save on this device"); } }
+function save(quiet){ try { localStorage.setItem(KEY, JSON.stringify(S)); if(!quiet) flash("Saved"); } catch { flash("Couldn't save on this device"); } }
 
 // ============================================================================
 // WHERE AM I IN THE PLAN
@@ -445,6 +454,112 @@ function recentTable(){
 }
 
 // ============================================================================
+// SYNC — Training Data Google Sheet (script in sheet-sync/Code.gs)
+// The app sends the last 14 days every time, not just today. The Sheet replaces
+// rows by date, so resending is harmless, and a failed send (offline in the
+// basement, a dead zone on a run) fixes itself on the next one.
+// Requests go as text/plain with no custom headers: that keeps them "simple"
+// cross-origin requests, so the browser skips the OPTIONS preflight that
+// Google Apps Script can't answer.
+// ============================================================================
+function setSyncLink(v){
+  v = v.trim();
+  if(!v){ S.sync = { url:"", token:"" }; S.remote = null; S.syncStatus = null; save(); render(); return; }
+  try {
+    const u = new URL(v), token = u.searchParams.get("token") || "";
+    if(u.hostname !== "script.google.com" || !u.pathname.endsWith("/exec") || !token) throw new Error();
+    S.sync = { url: u.origin + u.pathname, token };
+    save(); render(); pushLogs();
+  } catch { S.syncStatus = { ok:false, msg:"That isn't a sync link. Copy it from the Sheet: Training sync → 2 · Show app connection link.", at:new Date().toISOString() }; save(true); render(); }
+}
+
+let pushTimer = null;
+function schedulePush(){ if(!S.sync.url) return; S.syncPending = true; save(true); clearTimeout(pushTimer); pushTimer = setTimeout(pushLogs, 1500); }
+
+function logsForSync(){
+  return lastN(14).filter(d => S.logs[d] || S.sessionsDone[d]).map(d => {
+    const e = S.logs[d] || {};
+    return { date:d, stiff:e.stiff, pain:e.pain, prev:e.prev, done:!!S.sessionsDone[d],
+             phase:phaseNow(), week:S.rtrDone?effWeek():null, step:S.rtrDone?null:S.step };
+  });
+}
+
+async function syncCall(method){
+  const opts = method === "POST"
+    ? { method:"POST", body: JSON.stringify({ token:S.sync.token, logs:logsForSync() }) }
+    : { method:"GET" };
+  const url = method === "POST" ? S.sync.url : `${S.sync.url}?token=${encodeURIComponent(S.sync.token)}`;
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error === "bad token" ? "The Sheet rejected the token. Copy the link again from the Sheet." : (data.error || "Sheet error"));
+  return data;
+}
+
+function takeSnapshot(data){
+  S.remote = { coachNote:data.coachNote, wellness:data.wellness||[], lastSync:data.lastSync, lastError:data.lastError, fetchedAt:new Date().toISOString() };
+}
+
+async function pushLogs(){
+  if(!S.sync.url) return;
+  try {
+    const data = await syncCall("POST");
+    takeSnapshot(data);
+    S.syncPending = false;
+    S.syncStatus = { ok:true, msg:`Sent ${data.saved} day${data.saved===1?"":"s"} to the Sheet`, at:new Date().toISOString() };
+  } catch(err) {
+    S.syncPending = true;
+    S.syncStatus = { ok:false, msg: navigator.onLine===false ? "Offline. Will send when you're back online." : (err.message || "Couldn't reach the Sheet"), at:new Date().toISOString() };
+  }
+  save(true); render();
+}
+
+async function pullRemote(){
+  if(!S.sync.url) return;
+  try { takeSnapshot(await syncCall("GET")); S.syncStatus = S.syncStatus && !S.syncStatus.ok ? null : S.syncStatus; }
+  catch(err) { S.syncStatus = { ok:false, msg: err.message || "Couldn't reach the Sheet", at:new Date().toISOString() }; }
+  save(true); render();
+}
+
+const ago = iso => { if(!iso) return "never"; const m = Math.round((Date.now()-Date.parse(iso))/6e4); return m<1?"just now":m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} h ago`:`${Math.round(m/1440)} d ago`; };
+
+function syncSummary(){
+  if(!S.sync.url) return S.syncStatus && !S.syncStatus.ok ? esc(S.syncStatus.msg) : "Not connected. Paste the link from the Sheet's Training sync menu.";
+  const bits = [];
+  if(S.syncStatus) bits.push(`${S.syncStatus.ok?"✓":"⚠"} ${esc(S.syncStatus.msg)} (${ago(S.syncStatus.at)})`);
+  if(S.remote) bits.push(`Garmin data last pulled ${ago(S.remote.lastSync)}`);
+  if(S.remote && S.remote.lastError) bits.push(`⚠ Garmin sync error: ${esc(S.remote.lastError.replace(/^\S+\s/,""))}`);
+  return bits.join("<br>") || "Connected.";
+}
+
+function wellnessRows(){ return (S.remote && S.remote.wellness || []).filter(w => w.date); }
+
+// "Last night" vs the previous week. A single night means little; the comparison
+// with your own recent normal is what's worth glancing at.
+function garminCard(){
+  const rows = wellnessRows();
+  if(!rows.length) return "";
+  const latest = rows.slice().reverse().find(w => w.resting_hr || w.hrv_rmssd || w.sleep_h);
+  if(!latest) return "";
+  const prior = rows.filter(w => w.date < latest.date).slice(-7);
+  const avg = k => { const v = prior.map(w => parseFloat(w[k])).filter(x => !isNaN(x)); return v.length >= 3 ? v.reduce((a,b)=>a+b,0)/v.length : null; };
+  const stat = (lbl, k, unit, digits) => {
+    const v = parseFloat(latest[k]); if(isNaN(v)) return "";
+    const a = avg(k);
+    return `<div class="stat"><div class="lbl">${lbl}</div><div class="val">${v.toFixed(digits)}<span style="font-size:13px"> ${unit}</span></div>${a!=null?`<div class="cmp">7-day avg ${a.toFixed(digits)}</div>`:""}</div>`;
+  };
+  const d = new Date(latest.date+"T12:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+  return `<div class="card"><div class="eyebrow">Garmin · night of ${d}</div>
+    <div class="stats">${stat("Sleep","sleep_h","h",1)}${stat("HRV","hrv_rmssd","ms",0)}${stat("Resting HR","resting_hr","bpm",0)}</div></div>`;
+}
+
+function coachNoteCard(){
+  const n = S.remote && S.remote.coachNote;
+  if(!n || !n.note) return "";
+  const d = new Date(n.date+"T12:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  return `<div class="coachnote"><div class="eyebrow">Coach note · ${esc(d)}</div>${esc(n.note)}</div>`;
+}
+
+// ============================================================================
 // RENDER
 // ============================================================================
 let showSettings=false, showTable=false, coachReply="", coachBusy=false, picked=null;
@@ -473,6 +588,9 @@ function settingsCard(){
     <div class="setlbl">Goal race</div>
     <div class="rowbtns">${Object.entries(RACES).map(([k,r])=>`<button class="minibtn ${S.race===k?"":"alt"}" onclick="setRace('${k}')">${r.name.replace(" Marathon","")}</button>`).join("")}</div>
     <div class="note">${race.name}, ${fmtDate(race.date)}. Twin Cities shifts the whole plan one week later.</div>
+    <div class="setlbl">Sync link (Training Data sheet)</div>
+    <input type="password" value="${esc(S.sync.url?S.sync.url+"?token="+S.sync.token:"")}" placeholder="https://script.google.com/macros/s/…/exec?token=…" onchange="setSyncLink(this.value)">
+    <div class="syncline">${syncSummary()}</div>
     <div class="setlbl">Anthropic API key (optional — powers the coach)</div>
     <input type="password" value="${esc(S.apiKey||"")}" placeholder="sk-ant-..." onchange="setKey(this.value)">
     <div class="note">Stored only on this device. Get one at console.anthropic.com.</div>
@@ -508,6 +626,8 @@ function render(){
 
   ${settingsCard()}
 
+  ${coachNoteCard()}
+
   <div class="morning">
     <div class="eyebrow">Morning check</div>
 
@@ -530,6 +650,8 @@ function render(){
 
     <div class="verdict ${rec.cls}"><span class="vi">${rec.icon}</span><span>${rec.text}</span></div>
   </div>
+
+  ${garminCard()}
 
   <div class="card">
     <div class="eyebrow">Today's work</div>
@@ -594,8 +716,8 @@ function setLag(n){ S.lag=Math.max(0, S.lag+n); save(); render(); }
 function setRace(k){ S.race=k; save(); render(); }
 function setKey(v){ S.apiKey=v.trim(); save(); }
 function pickDay(d){ picked=d; render(); }
-function logField(k,v){ const t=today(); S.logs[t]=Object.assign({pain:null,stiff:null,prev:null},S.logs[t],{[k]:v}); save(); render(); }
-function toggleDone(){ S.sessionsDone[today()]=!S.sessionsDone[today()]; save(); render(); }
+function logField(k,v){ const t=today(); S.logs[t]=Object.assign({pain:null,stiff:null,prev:null},S.logs[t],{[k]:v}); save(); render(); schedulePush(); }
+function toggleDone(){ S.sessionsDone[today()]=!S.sessionsDone[today()]; save(); render(); schedulePush(); }
 function flash(msg){ const n=document.getElementById("savenote"); if(n){ n.textContent=msg; setTimeout(()=>{ if(n) n.textContent=""; },1200); } }
 
 function snapshot(n){
@@ -622,7 +744,8 @@ This week: ${weekSummary()}
 Rest-day stiffness baseline: ${baseline()??"not enough data"} min
 Gate says: ${recommendation().text}
 Last 28 days (stiffMin = minutes to loosen in the morning, pain = first-step 0-10, prevDay = what I did the day before):
-` + JSON.stringify(snapshot(28));
+` + JSON.stringify(snapshot(28)) + (wellnessRows().length ? `
+Garmin wellness, last 14 days (from intervals.icu): ` + JSON.stringify(wellnessRows()) : "");
   navigator.clipboard.writeText(payload).then(()=>flash("Copied — paste into your Claude chat")).catch(()=>alert(payload));
 }
 
@@ -638,6 +761,7 @@ The foot gate: each morning he logs minutes-to-loosen (stiffness), first-step pa
 
 Now: ${whereLine()}. This ${weekSummary()}. Baseline ${baseline()??"unknown"} min.
 Last 14 days: ${JSON.stringify(snapshot(14))}
+${wellnessRows().length ? `Garmin wellness, last 14 days (resting HR, HRV rMSSD ms, sleep hours; rising resting HR or falling HRV over several days = accumulating fatigue): ${JSON.stringify(wellnessRows().map(w=>({date:w.date, rhr:w.resting_hr, hrv:w.hrv_rmssd, sleep:w.sleep_h})))}` : ""}
 ${q?`Michael asks: "${q}"`:"Give a brief check-in: read the stiffness trend, note logging gaps, and say clearly whether to hold, advance, or step back."}
 
 Under 150 words, plain text, direct and warm. Judge the trend over single days.`;
@@ -663,6 +787,9 @@ Under 150 words, plain text, direct and warm. Judge the trend over single days.`
 // BOOT
 // ============================================================================
 render();
+if(S.sync.url){ if(S.syncPending) pushLogs(); else pullRemote(); }
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && S.sync.url) pullRemote(); });
+window.addEventListener("online", ()=>{ if(S.syncPending) pushLogs(); });
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 </script>
 </body>
