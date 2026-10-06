@@ -27,7 +27,9 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:14px; }
   .card .eyebrow { font-size:13px; }
   .item { display:flex; gap:10px; margin-top:10px; font-size:15px; line-height:1.4; }
+  .item.sub { font-size:13px; color:#3d4f49; margin-top:6px; }
   .dot { width:6px; height:6px; border-radius:3px; background:var(--amber); margin-top:7px; flex-shrink:0; }
+  .item.sub .dot { background:var(--mist); }
   button { cursor:pointer; font-family:var(--body); }
   button:focus-visible { outline:3px solid var(--amber); outline-offset:2px; }
   .bigbtn { width:100%; margin-top:16px; padding:14px 0; border-radius:10px; border:none; font-family:var(--display); font-size:18px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; background:var(--spruce); color:#fff; }
@@ -56,9 +58,8 @@
   .reply { margin-top:12px; background:var(--bg); border-radius:8px; padding:12px; font-size:14px; line-height:1.55; white-space:pre-wrap; }
   .settings { display:none; }
   .settings.open { display:block; }
-  .phasebtns { display:flex; gap:8px; margin-top:8px; }
-  .phasebtn { flex:1; padding:10px 0; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); font-weight:600; }
-  .phasebtn.on { background:var(--spruce); border-color:var(--spruce); color:#fff; }
+  .setlbl { font-size:13px; font-weight:600; margin-top:14px; }
+  .setlbl:first-child { margin-top:0; }
   .gear { background:none; border:1px solid var(--line); border-radius:8px; padding:6px 10px; color:var(--mist); font-size:13px; }
   .topbar { display:flex; justify-content:space-between; align-items:baseline; }
   .savenote { text-align:center; font-size:12px; color:var(--mist); margin-top:16px; min-height:16px; }
@@ -71,12 +72,21 @@
   .empty { font-size:13px; color:var(--mist); margin-top:10px; line-height:1.5; }
   .banner { background:#fff; border:1.5px solid var(--amber); border-radius:12px; padding:14px 16px; margin-top:14px; font-size:14px; line-height:1.5; }
   .banner b { font-family:var(--display); font-size:17px; letter-spacing:.5px; text-transform:uppercase; display:block; margin-bottom:6px; }
-  .rowbtns { display:flex; gap:8px; margin-top:12px; }
+  .rowbtns { display:flex; gap:8px; margin-top:8px; }
   .minibtn { flex:1; padding:10px 0; border-radius:8px; border:1.5px solid var(--spruce); background:var(--spruce); color:#fff; font-weight:600; font-size:13px; }
   .minibtn.alt { background:#fff; color:var(--spruce); }
+  .minibtn:disabled { opacity:.4; }
   table.tbl { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
   table.tbl th { text-align:left; color:var(--mist); font-weight:600; padding:4px 6px 4px 0; border-bottom:1px solid var(--line); }
   table.tbl td { padding:5px 6px 5px 0; border-bottom:1px solid var(--line); }
+  .strip { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:10px; }
+  .sday { text-align:center; padding:6px 0 7px; border-radius:8px; background:var(--bg); font-size:11px; color:var(--mist); line-height:1.25; }
+  .sday b { display:block; font-size:14px; color:var(--ink); margin-top:2px; }
+  /* "hard", not "key": .key is already the chart legend's class (CSS names are global) */
+  .sday.hard { background:var(--spruce); color:rgba(255,255,255,.75); }
+  .sday.hard b { color:#fff; }
+  .sday.now { outline:2px solid var(--amber); outline-offset:1px; }
+  .weeknote { font-size:13px; margin-top:10px; line-height:1.45; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -86,87 +96,39 @@
 <script>
 // ============================================================================
 // THE PLAN (data only — edit this, not the logic)
+// PLAN_DATA is generated from the same source as the "Road to Sub-3" doc, so the
+// app and the doc can't drift apart. Each week: d = [Mon..Sun] of [code, miles, text].
+// Codes: O off · E easy · Q workout · M medium-long · L long · X race · K shakeout
 // ============================================================================
+const PLAN_START = "2026-10-05";            // Monday of week 1
+const RACES = {
+  chicago: { name:"Chicago Marathon",     date:"2027-10-10", shift:0 },
+  tcm:     { name:"Twin Cities Marathon", date:"2027-10-17", shift:1 }   // one week later = one extra base week
+};
+const PHASES = { 1:"Return to run", 2:"Aerobic base", 3:"Speed & strength", 4:"Half-marathon prep", 5:"Marathon block", 6:"Taper & race" };
+const PLAN_DATA = {"steps":[{"s":1,"runs":{"Tue":16,"Thu":16,"Sat":16},"how":"4 × (4 min run / 1 min walk)"},{"s":2,"runs":{"Tue":20,"Thu":20,"Sat":20},"how":"4 × (5 min run / 1 min walk)"},{"s":3,"runs":{"Tue":24,"Thu":24,"Sat":24},"how":"3 × (8 min run / 1 min walk)"},{"s":4,"runs":{"Tue":26,"Thu":26,"Sat":26},"how":"2 × (13 min run / 1 min walk)"},{"s":5,"runs":{"Tue":25,"Thu":25,"Sat":25},"how":"25 min continuous"},{"s":6,"runs":{"Tue":25,"Thu":25,"Sat":25,"Sun":15},"how":"continuous; 4th run added"},{"s":7,"runs":{"Tue":25,"Thu":30,"Sat":30,"Sun":15},"how":"continuous"},{"s":8,"runs":{"Tue":30,"Thu":30,"Sat":35,"Sun":20},"how":"continuous"}],"weeks":[{"w":9,"ph":2,"mi":14,"dn":false,"sb":true,"st":false,"hs":false,"note":"Miles replace minutes. Every run conversational.","d":[["O",0,""],["E",3.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["L",5,"easy"]]},{"w":10,"ph":2,"mi":16,"dn":false,"sb":true,"st":true,"hs":false,"note":"Strides start if you've had 4 clean weeks of continuous running.","d":[["O",0,""],["E",3.5,"Easy"],["O",0,""],["E",3.5,"Easy"],["O",0,""],["E",4.0,"Easy"],["L",5,"easy"]]},{"w":11,"ph":2,"mi":18,"dn":false,"sb":true,"st":true,"hs":false,"note":"5th day added (Wed). Nothing else changes this week.","d":[["O",0,""],["E",3.0,"Easy"],["E",3.0,"Easy"],["E",3.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["L",6,"easy"]]},{"w":12,"ph":2,"mi":14,"dn":true,"sb":true,"st":true,"hs":false,"note":"Down week (holidays).","d":[["O",0,""],["E",3.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["L",5,"easy"]]},{"w":13,"ph":2,"mi":20,"dn":false,"sb":true,"st":true,"hs":false,"note":"","d":[["O",0,""],["E",3.5,"Easy"],["E",3.5,"Easy"],["E",3.5,"Easy"],["O",0,""],["E",2.5,"Easy"],["L",7,"easy"]]},{"w":14,"ph":2,"mi":22,"dn":false,"sb":true,"st":true,"hs":true,"note":"Hill sprints start Thu (moderate 4–6% grade; treadmill incline in winter).","d":[["O",0,""],["E",4.0,"Easy"],["E",4.0,"Easy"],["E",4.0,"Easy"],["O",0,""],["E",3.0,"Easy"],["L",7,"easy"]]},{"w":15,"ph":2,"mi":24,"dn":false,"sb":true,"st":true,"hs":true,"note":"","d":[["O",0,""],["E",4.0,"Easy"],["E",4.0,"Easy"],["E",4.0,"Easy"],["O",0,""],["E",4.0,"Easy"],["L",8,"easy"]]},{"w":16,"ph":2,"mi":19,"dn":true,"sb":true,"st":true,"hs":false,"note":"Down week.","d":[["O",0,""],["E",3.5,"Easy"],["E",3.5,"Easy"],["E",3.5,"Easy"],["O",0,""],["E",2.5,"Easy"],["L",6,"easy"]]},{"w":17,"ph":2,"mi":26,"dn":false,"sb":true,"st":true,"hs":true,"note":"","d":[["O",0,""],["E",4.5,"Easy"],["E",4.5,"Easy"],["E",4.5,"Easy"],["O",0,""],["E",3.5,"Easy"],["L",9,"easy"]]},{"w":18,"ph":2,"mi":28,"dn":false,"sb":true,"st":true,"hs":true,"note":"","d":[["O",0,""],["E",5.0,"Easy"],["E",5.0,"Easy"],["E",5.0,"Easy"],["O",0,""],["E",4.0,"Easy"],["L",9,"easy"]]},{"w":19,"ph":2,"mi":30,"dn":false,"sb":true,"st":true,"hs":true,"note":"","d":[["O",0,""],["E",5.0,"Easy"],["E",5.0,"Easy"],["E",5.0,"Easy"],["O",0,""],["E",5.0,"Easy"],["L",10,"easy"]]},{"w":20,"ph":2,"mi":25,"dn":true,"sb":true,"st":true,"hs":false,"note":"Down week.","d":[["O",0,""],["E",4.5,"Easy"],["E",4.5,"Easy"],["E",4.5,"Easy"],["O",0,""],["E",3.5,"Easy"],["L",8,"easy"]]},{"w":21,"ph":3,"mi":30,"dn":false,"sb":true,"st":false,"hs":false,"note":"First workout. Mileage held flat.","d":[["O",0,""],["Q",6,"Hills: 6 × 60s uphill (4–6% grade), hard but controlled, jog down"],["E",4.5,"Easy"],["E",4.5,"Easy"],["O",0,""],["E",5.0,"Easy"],["L",10,"easy"]]},{"w":22,"ph":3,"mi":32,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",7,"Hills: 8 × 60s uphill, jog down"],["E",5.0,"Easy"],["E",5.0,"Easy"],["O",0,""],["E",5.0,"Easy"],["L",10,"easy"]]},{"w":23,"ph":3,"mi":32,"dn":false,"sb":true,"st":false,"hs":false,"note":"Threshold starts. Mileage held flat.","d":[["O",0,""],["Q",7,"Hills: 8 × 60s uphill, jog down"],["E",4.0,"Easy"],["Q",6,"Threshold intro: 3 × 5 min @ T, 1 min jog"],["O",0,""],["E",4.0,"Easy"],["L",11,"easy"]]},{"w":24,"ph":3,"mi":27,"dn":true,"sb":true,"st":false,"hs":false,"note":"Down week + time trial. Sunday is short and easy.","d":[["O",0,""],["Q",6,"Hills: 6 × 60s, relaxed"],["E",5.5,"Easy"],["E",5.0,"Easy"],["O",0,""],["X",5.5,"5K time trial: all-out, on a track or treadmill at 1%. Sets your paces."],["E",5,"Easy, the day after racing"]]},{"w":25,"ph":3,"mi":32,"dn":false,"sb":true,"st":false,"hs":false,"note":"First flat intervals. Mileage held flat.","d":[["O",0,""],["Q",7,"5 × 3 min @ 5K effort, 2 min jog"],["E",4.0,"Easy"],["Q",6,"3 × 6 min @ T, 1 min jog"],["O",0,""],["E",4.0,"Easy"],["L",11,"easy"]]},{"w":26,"ph":3,"mi":35,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",7,"6 × 800 m @ 5K pace, 400 m jog"],["E",4.5,"Easy"],["Q",7,"Cruise intervals: 3 × 1 mi @ T, 1 min jog"],["O",0,""],["E",4.5,"Easy"],["L",12,"easy"]]},{"w":27,"ph":3,"mi":37,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",8,"5 × 1 km @ 5K pace, 400 m jog"],["E",5.0,"Easy"],["Q",7,"4 × 1 mi @ T, 1 min jog"],["O",0,""],["E",5.0,"Easy"],["L",12,"easy"]]},{"w":28,"ph":3,"mi":31,"dn":true,"sb":true,"st":false,"hs":false,"note":"Down week + 5K race.","d":[["O",0,""],["Q",6,"Sharpener: 4 × 400 m @ 5K pace, full recovery"],["E",7.0,"Easy"],["E",7.0,"Easy"],["O",0,""],["X",6,"5K race (any local 5K, Apr 17–18)"],["E",5,"Easy, the day after racing"]]},{"w":29,"ph":3,"mi":38,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",8,"5 × 1 km @ 5K pace, 400 m jog"],["E",5.0,"Easy"],["Q",7,"Tempo: 20 min @ T"],["O",0,""],["E",5.0,"Easy"],["L",13,"easy"]]},{"w":30,"ph":3,"mi":38,"dn":false,"sb":true,"st":false,"hs":false,"note":"Fast 400s start. Mileage held flat.","d":[["O",0,""],["Q",7,"Speed: 10 × 400 m @ mile–3K pace, full jog recovery"],["E",5.5,"Easy"],["Q",7,"2 × 12 min @ T, 2 min jog"],["O",0,""],["E",5.5,"Easy"],["L",13,"easy"]]},{"w":31,"ph":3,"mi":33,"dn":true,"sb":true,"st":false,"hs":false,"note":"Down week + 10K race.","d":[["O",0,""],["Q",6,"4 × 1 km @ 10K pace, 2 min jog"],["E",6.5,"Easy"],["E",6.5,"Easy"],["O",0,""],["X",9,"10K race (any local 10K, May 8–9)"],["E",5,"Easy, the day after racing"]]},{"w":32,"ph":4,"mi":41,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",8,"5 × 1 km @ 5K pace, 400 m jog"],["E",5.5,"Easy"],["Q",8,"Tempo: 25 min @ T"],["O",0,""],["E",5.5,"Easy"],["L",14,"easy"]]},{"w":33,"ph":4,"mi":43,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",7,"6 × 800 m @ 5K pace, 400 m jog"],["E",7.0,"Easy"],["Q",8,"8 mi with middle 5 @ half-marathon effort"],["O",0,""],["E",7.0,"Easy"],["L",14,"easy"]]},{"w":34,"ph":4,"mi":38,"dn":false,"sb":true,"st":false,"hs":false,"note":"Mini-taper starts.","d":[["O",0,""],["Q",7,"4 × 1 km @ 5K pace"],["E",6.0,"Easy"],["Q",7,"7 mi with 2 × 2 mi @ half-marathon pace"],["O",0,""],["E",6.0,"Easy"],["L",12,"easy"]]},{"w":35,"ph":4,"mi":33,"dn":false,"sb":false,"st":false,"hs":false,"note":"Race week. Strength off. Sat = 3 mi shakeout.","d":[["O",0,""],["Q",6,"6 mi with 2 mi @ half-marathon pace"],["E",5.0,"Easy"],["E",4,"Easy + 4 strides"],["O",0,""],["K",3,"Shakeout + 4 strides"],["X",15,"HALF MARATHON — Chicago 13.1 (Jun 6) or a local half"]]},{"w":36,"ph":5,"mi":28,"dn":false,"sb":true,"st":true,"hs":false,"note":"Recovery after the half. No workouts; strides Tue.","d":[["O",0,""],["E",4.5,"Easy"],["E",4.5,"Easy"],["E",4.5,"Easy"],["O",0,""],["E",4.5,"Easy"],["L",10,"easy"]]},{"w":37,"ph":5,"mi":38,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",8,"8 mi with 4 mi @ T"],["E",4.5,"Easy"],["M",8,"Medium-long, easy"],["O",0,""],["E",4.5,"Easy"],["L",13,"easy"]]},{"w":38,"ph":5,"mi":42,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",9,"5 × 1 km @ 5K pace"],["E",4.5,"Easy"],["M",9,"Medium-long, easy"],["O",0,""],["E",4.5,"Easy"],["L",15,"easy"]]},{"w":39,"ph":5,"mi":45,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",9,"2 × 2.5 mi @ T, 2 min jog"],["E",5.0,"Easy"],["M",10,"Medium-long, easy"],["O",0,""],["E",5.0,"Easy"],["L",16,"last 4 @ MP"]]},{"w":40,"ph":5,"mi":38,"dn":true,"sb":true,"st":false,"hs":false,"note":"Down week.","d":[["O",0,""],["Q",8,"8 × 30s hills + strides"],["E",4.5,"Easy"],["M",8,"Medium-long, easy"],["O",0,""],["E",4.5,"Easy"],["L",13,"easy"]]},{"w":41,"ph":5,"mi":47,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",9,"5 mi continuous @ T"],["E",5.0,"Easy"],["M",11,"Medium-long, easy"],["O",0,""],["E",5.0,"Easy"],["L",17,"easy"]]},{"w":42,"ph":5,"mi":50,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",9,"6 × 1 km @ 5K pace"],["E",7.0,"Easy"],["M",11,"Medium-long, easy"],["O",0,""],["E",7.0,"Easy"],["L",16,"8 @ MP"]]},{"w":43,"ph":5,"mi":52,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",10,"3 × 2 mi @ T, 2 min jog"],["E",6.0,"Easy"],["M",12,"Medium-long, easy"],["O",0,""],["E",6.0,"Easy"],["L",18,"easy"]]},{"w":44,"ph":5,"mi":42,"dn":true,"sb":true,"st":false,"hs":false,"note":"Down week.","d":[["O",0,""],["Q",8,"5 × 1 km @ 5K pace"],["E",5.5,"Easy"],["M",9,"Medium-long, easy"],["O",0,""],["E",5.5,"Easy"],["L",14,"easy"]]},{"w":45,"ph":5,"mi":53,"dn":false,"sb":true,"st":false,"hs":false,"note":"First 20-miler. Practice race fueling.","d":[["O",0,""],["Q",10,"5 mi continuous @ T"],["E",5.5,"Easy"],["M",12,"Medium-long, easy"],["O",0,""],["E",5.5,"Easy"],["L",20,"easy"]]},{"w":46,"ph":5,"mi":55,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",10,"6 × 1 km @ 5K pace"],["E",8.0,"Easy"],["M",12,"Medium-long, easy"],["O",0,""],["E",8.0,"Easy"],["L",17,"12 @ MP"]]},{"w":47,"ph":5,"mi":56,"dn":false,"sb":true,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",10,"2 × 3 mi @ T, 3 min jog"],["E",6.5,"Easy"],["M",13,"Medium-long, easy"],["O",0,""],["E",6.5,"Easy"],["L",20,"easy"]]},{"w":48,"ph":5,"mi":43,"dn":false,"sb":false,"st":false,"hs":false,"note":"Tune-up week. Sets final goal pace. Sat = 4 mi shakeout.","d":[["O",0,""],["Q",8,"4 × 1 km @ 5K pace"],["E",6.0,"Easy"],["M",9,"Medium-long, easy"],["O",0,""],["K",4,"Shakeout + 4 strides"],["X",16,"TUNE-UP HALF (or 10-mile) at full effort, ~Sep 5"]]},{"w":49,"ph":5,"mi":50,"dn":false,"sb":true,"st":false,"hs":false,"note":"Two days after the tune-up: Tue easy, workout moves to Thu. Last 20-miler.","d":[["O",0,""],["E",6.5,"Easy"],["E",6.5,"Easy"],["Q",10,"5 mi continuous @ T"],["O",0,""],["E",7.0,"Easy"],["L",20,"easy"]]},{"w":50,"ph":5,"mi":54,"dn":false,"sb":false,"st":false,"hs":false,"note":"Strength A Monday is the last full session; calf raises continue.","d":[["O",0,""],["Q",10,"6 × 1 km @ 5K pace"],["E",8.0,"Easy"],["M",12,"Medium-long, easy"],["O",0,""],["E",8.0,"Easy"],["L",16,"13 @ MP — dress rehearsal: race kit, race fuel"]]},{"w":51,"ph":6,"mi":45,"dn":false,"sb":false,"st":false,"hs":false,"note":"Taper: volume down, intensity stays.","d":[["O",0,""],["Q",9,"5 × 1 km @ 5K pace"],["E",5.0,"Easy"],["M",10,"Medium-long, easy"],["O",0,""],["E",5.0,"Easy"],["L",16,"easy"]]},{"w":52,"ph":6,"mi":36,"dn":false,"sb":false,"st":false,"hs":false,"note":"","d":[["O",0,""],["Q",8,"2 × 2 mi @ T"],["E",4.0,"Easy"],["M",8,"Medium-long, easy"],["O",0,""],["E",4.0,"Easy"],["L",12,"6 @ MP"]]},{"w":53,"ph":6,"mi":47.2,"dn":false,"sb":false,"st":false,"hs":false,"note":"Race week. Thu 5 + strides, Sat 3 shakeout.","d":[["O",0,""],["Q",7,"7 mi with 2 mi @ MP"],["E",6.0,"Easy"],["E",5,"Easy + 4 strides"],["O",0,""],["K",3,"Shakeout + 4 strides"],["X",26.2,"CHICAGO MARATHON — Oct 10"]]}]};
+const STEPS = PLAN_DATA.steps;              // phase 1: 8 gated walk-run steps
+const WEEKS = PLAN_DATA.weeks;              // weeks 9–53
+
 const WAKEUP = [
   "Before the first step: 20 ankle pumps + 10 toe curls in bed",
   "Band calf stretch 3×30s per foot",
   "Toe spreads ×15 · ankle circles ×10 each way"
 ];
-
 // Loading = the fascia's actual repair stimulus. Progress the WEIGHT, not the reps.
-const LOADING_NOTE = "Add load (backpack) until the last 2 reps are genuinely hard. Comfortable sets are not a treatment.";
-
-// --- The 8-week base-rebuild run progression -------------------------------
-// Advanced by the morning-check gate, NOT by the calendar. minutes = run time
-// per session. Weekly totals (2 runs): 16 24 30 32 40 48 54 56.
-const RUN_BLOCK = [
-  { wk:1, reps:8, run:1,  walk:2, third:false, note:"Deliberately easy. If it feels too slow, it's correct." },
-  { wk:2, reps:6, run:2,  walk:2, third:false, note:"Same effort, longer reps. Do not push pace." },
-  { wk:3, reps:5, run:3,  walk:2, third:false, note:"First week the runs feel like running." },
-  { wk:4, reps:4, run:4,  walk:2, third:false, note:"Consolidation week — only +1 min. Let tissue catch up." },
-  { wk:5, reps:4, run:5,  walk:2, third:true,  note:"Optional 3rd run unlocks — only if every morning was green." },
-  { wk:6, reps:3, run:8,  walk:2, third:true,  note:"Long reps now. Conversational pace throughout." },
-  { wk:7, reps:3, run:9,  walk:1, third:true,  note:"Walk breaks shorten. This is the real test of the fascia." },
-  { wk:8, reps:2, run:14, walk:2, third:true,  note:"Two long reps — next block is continuous running." }
-];
-const runSpec = w => RUN_BLOCK[Math.min(Math.max(w,1),RUN_BLOCK.length)-1];
-const runMinutes = w => { const b=runSpec(w); return b.reps*b.run; };
-
-function runDayItems(w, isThird){
-  const b = runSpec(w);
-  return [
-    "10-min brisk walk warm-up",
-    `${b.reps} × (${b.run} min easy run / ${b.walk} min walk)` + (isThird?" — optional 3rd run, same as this week":""),
-    "5-min walk cool-down",
-    `Soft surface · flat · no speed work · ${runMinutes(w)} min of running total`,
-    b.note
-  ];
-}
-
-const PLAN = {
- 1:{label:"Phase 1 · Settle & load",gate:"Walking is comfortable and loaded calf raises don't sting",run:false,days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Two-leg towel calf raises 3×12 (3s up · 2s hold · 3s down)","Goblet squats 3×10","Single-leg RDL (bodyweight) 3×8/side","KB row 3×10/side","Banded side steps 3×15/side"]},
-  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex: 8 rows → 8 squats → 8 presses per side · 4 rounds · 90s rest","Brisk 15-min walk if foot allows"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3×12",LOADING_NOTE,"Single-leg glute bridges 3×12/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["Goblet squats 3×10","KB press 3×8/side","KB deadlift 3×10","Banded clamshells 3×15/side","Suitcase carry 3×30s/side"]},
-  Fri:{title:"Loading + easy conditioning",type:"Loading",items:["Two-leg towel calf raises 3×12","20-min brisk walk or KB complex ×3 rounds"]},
-  Sat:{title:"Rest",type:"Rest",items:["Wake-up routine only"]},
-  Sun:{title:"Loading only",type:"Loading",items:["Two-leg towel calf raises 3×12","Glute bridges 3×12/side"]}}},
-
- 2:{label:"Phase 2 · Build capacity",gate:"15+ single-leg heel raises and 10 pain-free single-leg hops",run:false,days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg towel calf raises 3×8/side",LOADING_NOTE,"Goblet squats 3×10 (heavier)","Single-leg RDL + light KB 3×8/side","KB row 3×10/side"]},
-  Tue:{title:"Conditioning",type:"Conditioning",items:["KB complex · 4 rounds","Brisk walk 20–30 min"]},
-  Wed:{title:"Loading + hops",type:"Loading",items:["Single-leg towel calf raises 3×8/side","Two-leg pogo hops 3×20 (soft, quiet landings)","Single-leg glute bridges 3×12/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 3×10 (heavier)","Goblet squat 3×10","Banded clamshells 3×15/side","Suitcase carry 3×30s/side"]},
-  Fri:{title:"Loading + conditioning",type:"Loading",items:["Single-leg towel calf raises 3×8/side","Single-leg hops 3×10/side if two-leg is clean","KB complex ×3 or 30-min walk"]},
-  Sat:{title:"Active recovery",type:"Rest",items:["30–45 min walk · flat, soft ground"]},
-  Sun:{title:"Loading only",type:"Loading",items:["Single-leg calf raises 3×8/side","Glute bridges 3×12/side"]}}},
-
- 3:{label:"Phase 3 · Base rebuild (walk-run)",gate:"Finish Week 8, then move to continuous running",run:true,days:{
-  Mon:{title:"Loading + Strength A",type:"Strength",items:["Single-leg weighted calf raises 3×8/side (3·2·3 tempo)",LOADING_NOTE,"Goblet squats 4×8","KB single-leg RDL 3×8/side","Banded side steps 3×20/side"]},
-  Tue:{title:"Walk-Run",type:"Run",items:[]},
-  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3×8/side","Single-leg banded glute bridges 3×12/side","Keep this easy — it sits between two run days"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 4×8","Goblet squat 3×10","Clamshells 3×20/side","Carries 3×40s/side"]},
-  Fri:{title:"Walk-Run",type:"Run",items:[]},
-  Sat:{title:"Conditioning",type:"Conditioning",items:["KB complex 4–5 rounds, or 45-min walk"]},
-  Sun:{title:"Optional 3rd run",type:"Run",items:[]}}},
-
- 4:{label:"Phase 4 · Continuous base",gate:"≤10% weekly increase once you're past 40 min/week",run:true,days:{
-  Mon:{title:"Strength A",type:"Strength",items:["Weighted single-leg calf raises 4×8/side (heavier)",LOADING_NOTE,"Goblet squats 4×8","KB single-leg RDL 3×8/side","Banded side steps 3×20/side"]},
-  Tue:{title:"Easy run",type:"Run",items:["Continuous easy running · conversational pace","Build toward 40 min","Cadence cue: quick, quiet steps — aim ~5% above your old cadence"]},
-  Wed:{title:"Loading only",type:"Loading",items:["Weighted calf raises 3×8/side","Glute work 3×12/side"]},
-  Thu:{title:"Strength B",type:"Strength",items:["KB press 3×8/side","KB deadlift 4×8","Goblet squat 3×10","Clamshells + carries"]},
-  Fri:{title:"Easy run",type:"Run",items:["Continuous easy running","Same duration as Tuesday until the weekly step-up"]},
-  Sat:{title:"Long easy run",type:"Run",items:["Longest run of the week · all easy","Cap the weekly increase at 10% of total running time"]},
-  Sun:{title:"Rest",type:"Rest",items:["Wake-up routine only"]}}}
-};
+const LOADING_NOTE = "Add weight until the last 2 reps are genuinely hard. Comfortable sets are not a treatment.";
+const STRENGTH_A = ["Single-leg calf raises, towel under toes, 3×8/side (3s up · 2s hold · 3s down), holding a KB", LOADING_NOTE, "Goblet squat 4×8", "KB single-leg RDL 3×8/side", "Banded side steps 3×20/side"];
+const PLYO = "After a green morning only: pogo hops 3×20, then skips 3×20 m";
+const STRENGTH_B = ["KB press 3×8/side", "KB deadlift 4×8", "Goblet squat 3×10", "Clamshells 3×20/side", "Suitcase carry 3×40s/side"];
+const CALF_DAY = ["Weighted single-leg calf raises 3×8/side (3·2·3 tempo)", LOADING_NOTE, "Single-leg glute bridges 3×12/side"];
+const RUN_RULE = "Pain during the run stays at 3/10 or less and doesn't climb. If it climbs, walk home — that run is done.";
 
 // ============================================================================
 // STATE  (schema-versioned — migrate(), never trust old shapes)
 // ============================================================================
 const KEY = "pf-coach-state";
-const SCHEMA = 2;
-const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const SCHEMA = 3;
+const DAY_ORDER = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 const PAIN_ANCHORS = {
   0:"Nothing at all.",
@@ -187,33 +149,40 @@ const LOADS = [["rest","Rest"],["strength","Strength"],["run","Run"]];
 const iso = d => { const t=new Date(d); t.setMinutes(t.getMinutes()-t.getTimezoneOffset()); return t.toISOString().slice(0,10); };
 const today = () => iso(new Date());
 
-function def(){ return { v:SCHEMA, phase:3, runWeek:1, logs:{}, sessionsDone:{}, apiKey:"", started:today(), seenIntro:false }; }
+function def(){ return { v:SCHEMA, step:1, rtrDone:false, lag:0, race:"chicago", logs:{}, sessionsDone:{}, apiKey:"", started:today(), seenIntro:false }; }
 
-// Migration: v1 stored logs as painLogs{date:number}. Any schema change goes
-// here so an installed PWA upgrading in place never loses or misreads data.
+// Migrations run in order, one schema step at a time. A phone that skipped an
+// update (v1 → v3) walks through every step instead of needing a special case.
 function migrate(raw){
   if(!raw || typeof raw!=="object") return def();
   const s = Object.assign(def(), raw);
-  if(!raw.v || raw.v < 2){
+  const from = raw.v || 1;
+  if(from < 2){                       // v1 → v2: painLogs{date:number} → logs{date:{pain,stiff,prev}}
     s.logs = {};
     const old = raw.painLogs || {};
     for(const d of Object.keys(old)){
-      const v = old[d];
-      if(typeof v === "number") s.logs[d] = { pain:v, stiff:null, prev:null };
+      if(typeof old[d] === "number") s.logs[d] = { pain:old[d], stiff:null, prev:null };
     }
     delete s.painLogs;
-    s.phase = 3;        // cleared to start walk-run: low irritability, comfortable walking
-    s.runWeek = 1;
-    s.seenIntro = false;
+    s.phase = 3; s.runWeek = 1;
+  }
+  if(from < 3){                       // v2 → v3: rehab phases 1–4 → the year plan
+    const oldPhase = s.phase || 3, oldWeek = s.runWeek || 1;
+    // Old walk-run weeks were half the size of the new steps: map 2 old weeks → 1 new step.
+    s.step = oldPhase >= 3 ? Math.min(8, Math.max(1, Math.ceil(oldWeek/2))) : 1;
+    s.rtrDone = oldPhase >= 4;
+    s.lag = 0; s.race = "chicago"; s.seenIntro = false;
+    delete s.phase; delete s.runWeek;
   }
   s.v = SCHEMA;
   if(!s.logs || typeof s.logs!=="object") s.logs = {};
+  if(!s.sessionsDone || typeof s.sessionsDone!=="object") s.sessionsDone = {};
+  if(!RACES[s.race]) s.race = "chicago";
   return s;
 }
 
-// Persist the migration immediately. If we only wrote on the next save(), an
-// upgraded install would keep the old blob on disk until the user tapped
-// something — and a half-migrated store is the kind of bug you find in March.
+// Persist the migration immediately, so an upgraded install never sits with a
+// half-migrated blob on disk until the next tap.
 function load(){
   let raw = null;
   try { raw = JSON.parse(localStorage.getItem(KEY)); } catch { raw = null; }
@@ -222,7 +191,22 @@ function load(){
   return s;
 }
 let S = load();
-function save(){ localStorage.setItem(KEY, JSON.stringify(S)); flash("Saved"); }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); flash("Saved"); } catch { flash("Couldn't save on this device"); } }
+
+// ============================================================================
+// WHERE AM I IN THE PLAN
+// Calendar week comes from the date. Plan week = calendar − race shift − lag.
+// Lag is weeks you've chosen to hold back (illness, a red streak, a late
+// return-to-run). Phase 1 ignores the calendar entirely: the foot decides.
+// ============================================================================
+function calWeek(){ return Math.floor((Date.parse(today()) - Date.parse(PLAN_START)) / 864e5 / 7) + 1; }
+function planWeek(){ return calWeek() - RACES[S.race].shift - S.lag; }
+function effWeek(){ return Math.min(53, Math.max(9, planWeek())); }
+function weekSpec(w){ return WEEKS.find(x => x.w === w) || WEEKS.at(-1); }
+function phaseNow(){ return S.rtrDone ? weekSpec(effWeek()).ph : 1; }
+const dayKey = () => ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][new Date().getDay()];
+const fmtMi = m => (Math.round(m*10)/10).toString();
+const fmtDate = d => new Date(d+"T12:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
 
 // ============================================================================
 // ANALYSIS — the gate
@@ -231,10 +215,10 @@ function lastN(n){ const out=[]; for(let i=n-1;i>=0;i--){ const d=new Date(); d.
 function median(a){ if(!a.length) return null; const s=[...a].sort((x,y)=>x-y); const m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
 
 // Baseline = typical morning stiffness after a NON-running day. Everything is
-// judged against this, not against zero — the number that matters is whether
-// running made the morning worse than your own normal.
+// judged against this, not against zero. 28 days, because from the base phase
+// on, most days are run days and non-run mornings get scarce.
 function baseline(){
-  const v = lastN(21).map(d=>S.logs[d]).filter(e=>e && e.stiff!=null && e.prev && e.prev!=="run").map(e=>e.stiff);
+  const v = lastN(28).map(d=>S.logs[d]).filter(e=>e && e.stiff!=null && e.prev && e.prev!=="run").map(e=>e.stiff);
   return v.length>=3 ? median(v) : null;
 }
 
@@ -247,25 +231,150 @@ function verdict(e){
   if(e.pain>=4 || (e.stiff!=null && e.stiff > b+5))  return "yellow";
   return "green";
 }
+// A foot that is slowly getting worse raises its own baseline, so every
+// morning still looks "normal". Compare the last two weeks with the two before.
+function baselineCreep(){
+  const days = lastN(28);
+  const rest = ds => ds.map(d=>S.logs[d]).filter(e=>e && e.stiff!=null && e.prev && e.prev!=="run").map(e=>e.stiff);
+  const before = rest(days.slice(0,14)), after = rest(days.slice(14));
+  if(before.length < 2 || after.length < 2) return 0;
+  const rise = median(after) - median(before);
+  return rise >= 3 ? rise : 0;
+}
 function recentVerdicts(n){ return lastN(n).map(d=>verdict(S.logs[d])).filter(Boolean); }
 
 function recommendation(){
   const b = baseline();
   const logged = lastN(14).filter(d=>S.logs[d] && S.logs[d].pain!=null).length;
-  if(logged < 3) return { cls:"v-none", icon:"○", text:"Log three mornings — including at least one rest-day morning — before the gate can say anything useful." };
-  if(b==null) return { cls:"v-none", icon:"○", text:"Need 3 non-run mornings to set your baseline. Keep logging." };
-  const v = recentVerdicts(10);
-  const last3 = v.slice(-3);
-  if(last3.includes("red"))
-    return { cls:"v-red", icon:"✕", text:`Red. Drop back to Week ${Math.max(1,S.runWeek-1)} and hold there until two clean post-run mornings. Baseline ${b}m.` };
-  if(last3.filter(x=>x==="yellow").length>=2)
-    return { cls:"v-yellow", icon:"△", text:`Yellow. Repeat Week ${S.runWeek} — do not add time. Baseline ${b}m.` };
-  const greens = v.slice(-2).filter(x=>x==="green").length;
-  if(greens>=2 && S.runWeek < RUN_BLOCK.length)
-    return { cls:"v-green", icon:"✓", text:`Green ×2. Cleared for Week ${S.runWeek+1} — ${runMinutes(S.runWeek+1)} min of running per session. Baseline ${b}m.` };
-  if(greens>=2 && S.runWeek >= RUN_BLOCK.length)
-    return { cls:"v-green", icon:"✓", text:`Green ×2 at Week 8. You're ready for Phase 4 — continuous running. Baseline ${b}m.` };
-  return { cls:"v-none", icon:"○", text:`Holding at Week ${S.runWeek}. Two green post-run mornings unlock the next step. Baseline ${b}m.` };
+  if(logged < 3) return { cls:"v-none", icon:"○", text:"Log three mornings — including at least one after a non-run day — before the gate can say anything useful." };
+  if(b==null) return { cls:"v-none", icon:"○", text:"Need 3 mornings after non-run days to set your baseline. Keep logging." };
+  const v = recentVerdicts(10), last3 = v.slice(-3), greens = v.slice(-2).filter(x=>x==="green").length;
+  const red = last3.includes("red"), yellows = last3.filter(x=>x==="yellow").length >= 2, creep = baselineCreep();
+
+  if(!S.rtrDone){                                   // Phase 1: the gate moves you
+    if(red) return { cls:"v-red", icon:"✕", text:`Red. Drop back to step ${Math.max(1,S.step-1)} and hold until two clean post-run mornings. Baseline ${b}m.` };
+    if(yellows) return { cls:"v-yellow", icon:"△", text:`Yellow. Repeat step ${S.step} — do not add time. Baseline ${b}m.` };
+    if(creep) return { cls:"v-yellow", icon:"△", text:`Your rest-day baseline crept up ${creep} min in two weeks — the slow-worsening pattern. Hold step ${S.step}.` };
+    if(greens>=2 && S.step < STEPS.length) return { cls:"v-green", icon:"✓", text:`Green ×2. Cleared for step ${S.step+1} — start it next Monday (one step a week at most). Baseline ${b}m.` };
+    if(greens>=2) return { cls:"v-green", icon:"✓", text:`Green ×2 at step 8. Return-to-run is done — start the base phase in settings (⚙). Baseline ${b}m.` };
+    return { cls:"v-none", icon:"○", text:`Holding at step ${S.step}. Two green post-run mornings unlock the next step. Baseline ${b}m.` };
+  }
+  const W = weekSpec(effWeek());                    // Phases 2–6: the gate brakes you
+  if(red) return { cls:"v-red", icon:"✕", text:`Red. Next 2–3 days: bike, elliptical or rest. No workouts until two greens, then repeat last week (⚙ → hold a week). Baseline ${b}m.` };
+  if(yellows) return { cls:"v-yellow", icon:"△", text:`Yellow ×2. Repeat this week's volume next week and run the next workout easy. Baseline ${b}m.` };
+  if(creep) return { cls:"v-yellow", icon:"△", text:`Your rest-day baseline crept up ${creep} min in two weeks — the slow-worsening pattern. Hold this week's volume (⚙ → hold a week). Baseline ${b}m.` };
+  return { cls:"v-green", icon:"✓", text:`On plan. Week ${W.w}: ${fmtMi(W.mi)} mi${W.dn?" (down week)":""}. Baseline ${b}m.` };
+}
+
+// ============================================================================
+// TODAY'S SESSION
+// ============================================================================
+function phase1Day(dk){
+  const st = STEPS[S.step-1], m = st.runs[dk];
+  if(m != null){
+    return { title:`Run · step ${st.s}`, type:"Run", items:[
+      "5-min brisk walk first",
+      st.s >= 5 ? `${m} min continuous easy running` : `${st.how} — ${m} min of running`,
+      "Flat, even ground. Treadmill at 1% once it's icy.",
+      RUN_RULE ]};
+  }
+  if(dk==="Mon") return { title:"Strength A", type:"Strength", items:STRENGTH_A };
+  if(dk==="Wed") return { title:"Loading", type:"Loading", items:CALF_DAY };
+  if(dk==="Fri") return { title:"Strength B", type:"Strength", items:[...STRENGTH_B, "Weighted single-leg calf raises 3×8/side"] };
+  return { title:"Rest", type:"Rest", items:["Wake-up routine only", st.s < 6 ? "A Sunday run joins at step 6." : ""].filter(Boolean) };
+}
+
+function fuelLine(mi, ph){
+  if(mi < 10) return null;
+  return ph >= 5 ? "Fuel: 60–90 g carbs per hour, using the gels you'll race with" : "Fuel: 30–60 g carbs per hour from the first hour";
+}
+
+function planDay(w, dk){
+  const W = weekSpec(w), [code, mi, txt] = W.d[DAY_ORDER.indexOf(dk)];
+  const extra = [];
+  // Strength B rides on a hard day so easy days stay easy: Thu through Phase 4, Tue (workout day) after.
+  const sbDay = W.ph >= 5 ? "Tue" : "Thu";
+  if(dk===sbDay && W.sb) extra.push("Then Strength B:", ...STRENGTH_B);
+  switch(code){
+    case "O": {
+      if(dk==="Mon"){
+        if(w <= 50) return { title:"Strength A", type:"Strength", items:[...STRENGTH_A, ...(W.ph>=3 && W.ph<=4 ? [PLYO] : []), ...(W.ph>=5 ? ["Marathon block: 2 sets of each, not 3"] : [])] };
+        return { title:"Rest", type:"Rest", items:[w < 53 ? "Light calf raises 2×8/side, no added weight" : "Rest. Race week."] };
+      }
+      if(dk==="Wed") return { title:"Loading", type:"Loading", items:CALF_DAY };
+      return { title:"Rest", type:"Rest", items: w >= 53 ? ["Rest. Feet up."] : ["Calf raises 3×8/side, weighted", "Single-leg glute bridges 3×12/side"] };
+    }
+    case "E": {
+      const items = [txt==="Easy" ? `${fmtMi(mi)} mi conversational` : `${fmtMi(mi)} mi — ${txt}`];
+      if(dk==="Tue" && W.st) items.push("Then 6 × 20s strides, walk back to recover");
+      if(dk==="Thu" && W.hs) items.push("Then 6 × 10s hill sprints on a moderate 4–6% grade (treadmill incline in winter), walk down");
+      if(dk==="Wed" && W.ph>=5 && txt==="Easy") items.push("Then 4–6 × 20s strides");
+      items.push(RUN_RULE);
+      return { title:`Easy · ${fmtMi(mi)} mi`, type:"Run", items:[...items, ...extra] };
+    }
+    case "Q": {
+      const hills = /hill/i.test(txt);
+      return { title:`Workout · ${fmtMi(mi)} mi`, type:"Workout", items:[
+        txt,
+        "Warm up 2 mi easy + 4 strides. Cool down easy to make the distance.",
+        hills ? "Hills run by effort, not pace." : "Paces from your latest race or the Mar 20 time trial (VDOT calculator).",
+        RUN_RULE, ...extra ]};
+    }
+    case "M": return { title:`Medium-long · ${fmtMi(mi)} mi`, type:"Run", items:["Steady but conversational", fuelLine(mi, W.ph), RUN_RULE].filter(Boolean) };
+    case "L": return { title:`Long run · ${fmtMi(mi)} mi`, type:"Long run", items:[txt==="easy" ? "All easy" : txt, fuelLine(mi, W.ph), RUN_RULE].filter(Boolean) };
+    case "K": return { title:`Shakeout · ${fmtMi(mi)} mi`, type:"Run", items:["Very easy", "4 × 20s strides at the end", "Lay out race kit and fuel tonight"] };
+    case "X": {
+      const tt = /time trial/i.test(txt), long = mi >= 13;
+      return { title: tt ? "5K time trial" : "Race day", type:"Race", items:[
+        txt,
+        `About ${fmtMi(mi)} mi including warm-up and cool-down`,
+        long ? "Breakfast 3 hours out — the one you've tested before long runs" : "Warm up 2 mi easy + 4 strides; cool down 1 mi",
+        long ? "Even pace. The race starts in the last third." : "Even first half, then race the second half.",
+        "Afterwards: put the time into a VDOT calculator and update your paces" ]};
+    }
+  }
+  return { title:"Rest", type:"Rest", items:["Wake-up routine only"] };
+}
+
+function todaySession(){ return S.rtrDone ? planDay(effWeek(), dayKey()) : phase1Day(dayKey()); }
+
+// One-glance week: a cell per day. Key sessions (workout, long, race) are filled.
+function weekStrip(){
+  const now = dayKey();
+  const cells = DAY_ORDER.map(dk => {
+    let val = "—", key = false;
+    if(!S.rtrDone){
+      const m = STEPS[S.step-1].runs[dk];
+      if(m != null) val = m + "′";
+      else if(dk==="Mon" || dk==="Fri") val = "str";
+    } else {
+      const W = weekSpec(effWeek()), [code, mi] = W.d[DAY_ORDER.indexOf(dk)];
+      if(code !== "O") val = fmtMi(mi);
+      else if(dk==="Mon" && effWeek() <= 50) val = "str";
+      key = code==="Q" || code==="L" || code==="X";
+    }
+    return `<div class="sday ${key?"hard":""} ${dk===now?"now":""}">${dk.slice(0,2)}<b>${val}</b></div>`;
+  }).join("");
+  return `<div class="strip">${cells}</div>`;
+}
+
+function whereLine(){
+  if(!S.rtrDone){
+    const cw = calWeek() - RACES[S.race].shift;
+    const behind = cw > 8 ? ` · calendar is at week ${cw}` : "";
+    return `Phase 1 · ${PHASES[1]} · step ${S.step} of 8${behind}`;
+  }
+  const W = weekSpec(effWeek());
+  return `Phase ${W.ph} · ${PHASES[W.ph]} · week ${W.w} of 53${S.lag?` · ${S.lag} wk held back`:""}`;
+}
+
+function weekCardBody(){
+  if(!S.rtrDone){
+    const st = STEPS[S.step-1], total = Object.values(st.runs).reduce((a,b)=>a+b,0);
+    return `${weekStrip()}<div class="weeknote">Step ${st.s}: ${total} min of running this week · ${st.how}. Two green post-run mornings unlock step ${Math.min(8,st.s+1)}.</div>`;
+  }
+  const W = weekSpec(effWeek());
+  return `${weekStrip()}<div class="weeknote"><b>${fmtMi(W.mi)} mi</b>${W.dn?" · down week":""}${W.note?` · ${W.note}`:""}</div>`;
 }
 
 // ============================================================================
@@ -283,14 +392,11 @@ function trendChart(){
   if(have.length < 2) return `<div class="empty">Log two mornings and your stiffness trend appears here. Minutes-to-loosen is the metric that moves first — usually before the pain score budges.</div>`;
 
   const b = baseline();
-  // GUT reserves a right-hand gutter for the baseline label so it can never
-  // collide with a bar's direct label. Cheaper than collision detection.
   const W=340, GUT=52, PW=W-GUT, H=118, TOP=14, BASE=H-22, PLOT=BASE-TOP, GAP=3;
   const bw = (PW - GAP*(days.length-1))/days.length;
   const max = Math.max(10, ...have.map(e=>e.stiff), b!=null?b+6:0);
   const y = v => BASE - (v/max)*PLOT;
 
-  // Label only two bars: the most recent, and the peak. Never every point.
   const peak = Math.max(...have.map(z=>z.stiff));
   const labelIdx = new Set([days.length-1]);
   for(let i=0;i<days.length;i++){ const e=S.logs[days[i]]; if(e && e.stiff===peak){ labelIdx.add(i); break; } }
@@ -342,24 +448,40 @@ function recentTable(){
 // RENDER
 // ============================================================================
 let showSettings=false, showTable=false, coachReply="", coachBusy=false, picked=null;
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");
 
-function todaySession(){
-  const dk = DAYS[new Date().getDay()];
-  const ph = PLAN[S.phase];
-  const sess = Object.assign({}, ph.days[dk]);
-  if(ph.run && sess.type==="Run" && sess.items.length===0){
-    const isThird = dk==="Sun";
-    if(isThird && !runSpec(S.runWeek).third){
-      return { title:"Rest", type:"Rest", items:["Wake-up routine only","The optional 3rd run unlocks at Week 5."] };
-    }
-    sess.title = `Walk-Run · Week ${S.runWeek}`;
-    sess.items = runDayItems(S.runWeek, isThird);
-  }
-  return sess;
+function settingsCard(){
+  const race = RACES[S.race];
+  const p1 = !S.rtrDone ? `
+    <div class="setlbl">Return-to-run step ${S.step} of 8</div>
+    <div class="rowbtns">
+      <button class="minibtn alt" onclick="stepTo(-1)" ${S.step<=1?"disabled":""}>− Back a step</button>
+      <button class="minibtn" onclick="stepTo(1)" ${S.step>=8?"disabled":""}>Next step +</button>
+    </div>
+    ${S.step>=8?`<button class="ghost" onclick="finishRtr()">Step 8 is done — start the base</button>`:""}
+    <div class="note">Only advance when the gate says green. Stepping back after a red morning is the plan working, not a failure.</div>` : `
+    <div class="setlbl">Plan week ${effWeek()} of 53${S.lag?` (holding ${S.lag} back)`:""}</div>
+    <div class="rowbtns">
+      <button class="minibtn alt" onclick="setLag(1)">Hold a week</button>
+      <button class="minibtn" onclick="setLag(-1)" ${S.lag<=0?"disabled":""}>Catch up a week</button>
+    </div>
+    <div class="note">Hold after a red streak, illness or a missed week. Catch up at most one week in any three, and only on a green week.</div>
+    <button class="ghost" onclick="reopenRtr()">Back to return-to-run</button>`;
+  return `
+  <div class="card settings ${showSettings?"open":""}">
+    ${p1}
+    <div class="setlbl">Goal race</div>
+    <div class="rowbtns">${Object.entries(RACES).map(([k,r])=>`<button class="minibtn ${S.race===k?"":"alt"}" onclick="setRace('${k}')">${r.name.replace(" Marathon","")}</button>`).join("")}</div>
+    <div class="note">${race.name}, ${fmtDate(race.date)}. Twin Cities shifts the whole plan one week later.</div>
+    <div class="setlbl">Anthropic API key (optional — powers the coach)</div>
+    <input type="password" value="${esc(S.apiKey||"")}" placeholder="sk-ant-..." onchange="setKey(this.value)">
+    <div class="note">Stored only on this device. Get one at console.anthropic.com.</div>
+    <button class="ghost" onclick="exportData()">Copy my data (for weekly check-in)</button>
+  </div>`;
 }
 
 function render(){
-  const now=new Date(), ph=PLAN[S.phase], sess=todaySession();
+  const now=new Date(), sess=todaySession();
   const t=today(), e=S.logs[t]||{}, done=!!S.sessionsDone[t];
   const rec = recommendation();
   const app=document.getElementById("app");
@@ -368,39 +490,23 @@ function render(){
   <div class="topbar">
     <div>
       <div class="eyebrow">${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</div>
-      <h1>${sess.title}</h1>
+      <h1>${esc(sess.title)}</h1>
     </div>
     <button class="gear" onclick="toggleSettings()" aria-label="Settings">⚙</button>
   </div>
   <div class="tagrow">
     <span class="tag">${sess.type}</span>
-    <span class="phaselbl">${ph.label}</span>
-    ${ph.run?`<span class="phaselbl">· ${runMinutes(S.runWeek)} min/run</span>`:""}
+    <span class="phaselbl">${whereLine()}</span>
   </div>
 
   ${!S.seenIntro?`
   <div class="banner">
-    <b>What changed</b>
-    The old gate waited for seven pain-free mornings. With plantar fascia that can mean waiting forever — so it's gone. The new rule compares each post-run morning to your own rest-day baseline. You start running now, at Week 1, and the app decides when you step up.
+    <b>Now following the full plan</b>
+    Morning Coach now runs the whole year to the ${RACES[S.race].name} (${fmtDate(RACES[S.race].date)}), matching the "Road to Sub-3" doc. You start at return-to-run step ${S.step}: three walk-runs a week. The morning check works the same way; it now steers every phase.
     <div class="rowbtns"><button class="minibtn" onclick="dismissIntro()">Got it</button></div>
   </div>`:""}
 
-  <div class="card settings ${showSettings?"open":""}">
-    <div style="font-size:13px;font-weight:600">Phase</div>
-    <div class="phasebtns">${[1,2,3,4].map(p=>`<button class="phasebtn ${S.phase===p?"on":""}" onclick="setPhase(${p})">${p}</button>`).join("")}</div>
-    <div class="note">${ph.label} — gate: ${ph.gate}</div>
-    ${ph.run?`
-    <div style="font-size:13px;font-weight:600;margin-top:14px">Run week (${S.runWeek} of 8 · ${runMinutes(S.runWeek)} min/session)</div>
-    <div class="rowbtns">
-      <button class="minibtn alt" onclick="stepWeek(-1)">− Back a week</button>
-      <button class="minibtn" onclick="stepWeek(1)">Advance a week +</button>
-    </div>
-    <div class="note">Only advance when the gate says green. Stepping back after a red morning is the plan working, not a failure.</div>`:""}
-    <div style="font-size:13px;font-weight:600;margin-top:14px">Anthropic API key (optional — powers the coach)</div>
-    <input type="password" value="${S.apiKey||""}" placeholder="sk-ant-..." onchange="setKey(this.value)">
-    <div class="note">Stored only on this device. Get one at console.anthropic.com.</div>
-    <button class="ghost" onclick="exportData()">Copy my data (for weekly check-in)</button>
-  </div>
+  ${settingsCard()}
 
   <div class="morning">
     <div class="eyebrow">Morning check</div>
@@ -426,6 +532,19 @@ function render(){
   </div>
 
   <div class="card">
+    <div class="eyebrow">Today's work</div>
+    ${sess.items.map(i=> /^Then Strength B:$/.test(i)
+      ? `<div class="item" style="margin-top:14px;font-weight:600">${i}</div>`
+      : `<div class="item ${STRENGTH_B.includes(i)&&sess.type!=="Strength"?"sub":""}"><div class="dot"></div><div>${esc(i)}</div></div>`).join("")}
+    <button class="bigbtn ${done?"done":""}" onclick="toggleDone()">${done?"✓ Session done":"Mark session done"}</button>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">This week</div>
+    ${weekCardBody()}
+  </div>
+
+  <div class="card">
     <div class="eyebrow">Stiffness trend · 14 days</div>
     ${trendChart()}
     <div class="detail">${picked ? dayDetail(picked) : "Tap a bar for that day. Flat or falling over two weeks is progress — single bad mornings are noise."}</div>
@@ -439,18 +558,12 @@ function render(){
   </div>
 
   <div class="card">
-    <div class="eyebrow">Today's work</div>
-    ${sess.items.map(i=>`<div class="item"><div class="dot"></div><div>${i}</div></div>`).join("")}
-    <button class="bigbtn ${done?"done":""}" onclick="toggleDone()">${done?"✓ Session done":"Mark session done"}</button>
-  </div>
-
-  <div class="card">
     <div class="eyebrow">Coach</div>
     ${S.apiKey?`
       <input id="q" placeholder="Ask anything, or leave blank for a check-in">
       <button class="ghost" onclick="askCoach()" ${coachBusy?"disabled":""}>${coachBusy?"Thinking…":"Get coaching update"}</button>
-      ${coachReply?`<div class="reply">${coachReply.replace(/</g,"&lt;")}</div>`:""}
-      <div class="note">The coach sees your phase, run week, baseline and last 14 days.</div>
+      ${coachReply?`<div class="reply">${esc(coachReply)}</div>`:""}
+      <div class="note">The coach sees your phase, this week's plan, your baseline and the last 14 days.</div>
     `:`
       <div style="font-size:14px;margin-top:8px;line-height:1.5">Add an API key in settings (⚙) to enable in-app coaching, or tap below to copy your recent data into your Claude check-in chat.</div>
       <button class="ghost" onclick="exportData()">Copy my data for check-in</button>
@@ -472,8 +585,13 @@ function dayDetail(d){
 function toggleSettings(){ showSettings=!showSettings; render(); }
 function toggleTable(){ showTable=!showTable; render(); }
 function dismissIntro(){ S.seenIntro=true; save(); render(); }
-function setPhase(p){ S.phase=p; save(); render(); }
-function stepWeek(n){ S.runWeek=Math.min(RUN_BLOCK.length,Math.max(1,S.runWeek+n)); save(); render(); }
+function stepTo(n){ S.step=Math.min(STEPS.length,Math.max(1,S.step+n)); save(); render(); }
+// Finishing late doesn't throw you into the calendar's mileage: the weeks you're
+// behind become lag, so you start the base at week 9 whatever the date.
+function finishRtr(){ S.rtrDone=true; S.lag=Math.max(0, calWeek() - RACES[S.race].shift - 9); save(); render(); }
+function reopenRtr(){ if(confirm("Go back to return-to-run? Your logs are kept.")){ S.rtrDone=false; S.lag=0; save(); render(); } }
+function setLag(n){ S.lag=Math.max(0, S.lag+n); save(); render(); }
+function setRace(k){ S.race=k; save(); render(); }
 function setKey(v){ S.apiKey=v.trim(); save(); }
 function pickDay(d){ picked=d; render(); }
 function logField(k,v){ const t=today(); S.logs[t]=Object.assign({pain:null,stiff:null,prev:null},S.logs[t],{[k]:v}); save(); render(); }
@@ -487,9 +605,20 @@ function snapshot(n){
   });
 }
 
+function weekSummary(){
+  if(!S.rtrDone){
+    const st=STEPS[S.step-1];
+    return `return-to-run step ${st.s}/8: ${Object.entries(st.runs).map(([d,m])=>`${d} ${m} min`).join(", ")} (${st.how})`;
+  }
+  const W=weekSpec(effWeek());
+  return `week ${W.w}/53, ${W.mi} mi${W.dn?" (down week)":""}: ` + W.d.map((x,i)=>x[0]==="O"?null:`${DAY_ORDER[i]} ${x[1]} mi ${x[2]}`).filter(Boolean).join("; ");
+}
+
 function exportData(){
+  const race=RACES[S.race];
   const payload = `Morning Coach check-in.
-Phase ${S.phase} (${PLAN[S.phase].label}) | Run week ${S.runWeek}/8 = ${runMinutes(S.runWeek)} min running per session
+Goal race: ${race.name} ${race.date} | Phase ${phaseNow()} (${PHASES[phaseNow()]})${S.lag?` | holding ${S.lag} week(s) back`:""}
+This week: ${weekSummary()}
 Rest-day stiffness baseline: ${baseline()??"not enough data"} min
 Gate says: ${recommendation().text}
 Last 28 days (stiffMin = minutes to loosen in the morning, pain = first-step 0-10, prevDay = what I did the day before):
@@ -500,17 +629,18 @@ Last 28 days (stiffMin = minutes to loosen in the morning, pain = first-step 0-1
 async function askCoach(){
   const q=document.getElementById("q").value.trim();
   coachBusy=true; coachReply=""; render();
-  const prompt=`You are the running/rehab coach for Michael, rebuilding running base after plantar fasciitis, long-term goal sub-3 marathon.
+  const race=RACES[S.race];
+  const prompt=`You are Michael's running coach and physical therapist. Goal: sub-3:00 at the ${race.name} on ${race.date}. His only marathon is a 3:30 off a 13-week build after a decade off running; he is returning from plantar fasciitis.
 
-The plan: 4 phases. Phase 3 is an 8-week walk-run base rebuild, 2 runs/week (optional 3rd from week 5), advanced by a pain-monitoring gate, not the calendar.
+The plan: 53 weeks from ${PLAN_START} in 6 phases. 1 return to run (8 walk-run steps, gated). 2 aerobic base (14 to 30 mi/week, easy + strides). 3 speed & strength (hills, then threshold, then intervals; 5K time trial Mar 20, 5K race in April, 10K in May). A week that adds a new kind of workout holds mileage flat. 4 half-marathon checkpoint Jun 6 (1:25 or faster = sub-3 attempt). 5 marathon block (peak 56 mi/week, three 20-mile runs; Tue workout, Thu medium-long, Sun long). 6 taper. Every 4th week is a down week.
 
-The gate: each morning he logs minutes-to-loosen (stiffness), first-step pain 0-10, and what he did the day before. Baseline = median stiffness after NON-running days. A post-run morning is GREEN if pain<=3 and stiffness<=baseline+5; YELLOW if pain 4-5 or stiffness baseline+5..+10; RED if pain>=6 or stiffness>baseline+10. Two greens unlock the next week. Two yellows = repeat the week. Any red = drop back a week.
+The foot gate: each morning he logs minutes-to-loosen (stiffness), first-step pain 0-10, and what he did the day before. Baseline = median stiffness after non-run days over 28 days. A post-run morning is GREEN if pain<=3 and stiffness<=baseline+5; YELLOW if pain 4-5 or stiffness baseline+5..+10; RED if pain>=6 or stiffness>baseline+10. Phase 1: two greens unlock the next step (at most one step a week), two yellows repeat it, a red drops back a step. If the rest-day baseline rises 3+ min over two weeks, hold. Later phases: two yellows = repeat this week's volume and make the next workout easy; a red = 2-3 days of cross-training, no workouts until two greens, then repeat the previous week.
 
-Current: phase ${S.phase}, run week ${S.runWeek}/8 (${runMinutes(S.runWeek)} min running per session), baseline ${baseline()??"unknown"} min.
+Now: ${whereLine()}. This ${weekSummary()}. Baseline ${baseline()??"unknown"} min.
 Last 14 days: ${JSON.stringify(snapshot(14))}
 ${q?`Michael asks: "${q}"`:"Give a brief check-in: read the stiffness trend, note logging gaps, and say clearly whether to hold, advance, or step back."}
 
-Under 140 words, plain text, direct and warm. Judge trend over single days.`;
+Under 150 words, plain text, direct and warm. Judge the trend over single days.`;
   try{
     const res=await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
@@ -520,7 +650,7 @@ Under 140 words, plain text, direct and warm. Judge trend over single days.`;
         "anthropic-version":"2023-06-01",
         "anthropic-dangerous-direct-browser-access":"true"
       },
-      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:400,messages:[{role:"user",content:prompt}]})
+      body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:500,messages:[{role:"user",content:prompt}]})
     });
     const data=await res.json();
     if(data.error){ coachReply="API error: "+(data.error.message||"check your key in settings."); }
