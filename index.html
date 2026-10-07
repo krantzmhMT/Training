@@ -95,6 +95,11 @@
   .stat .val { font-family:var(--display); font-size:24px; font-weight:700; line-height:1.1; }
   .stat .cmp { font-size:11px; color:#3d4f49; }
   .syncline { font-size:11px; color:var(--mist); margin-top:6px; line-height:1.4; }
+  .donebtn { width:100%; margin-top:16px; padding:13px 0; border-radius:10px; border:none; background:var(--amber); color:#3a2405; font-family:var(--display); font-size:18px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .mtop { display:flex; justify-content:space-between; align-items:center; }
+  .editlink { background:none; border:1px solid rgba(255,255,255,.35); color:#fff; border-radius:8px; padding:5px 14px; font-size:13px; font-weight:600; }
+  .msum { font-size:15px; margin-top:8px; line-height:1.45; }
+  .msync { font-size:12px; color:rgba(255,255,255,.6); margin-top:4px; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; } }
 </style>
 </head>
@@ -594,6 +599,67 @@ function coachNoteCard(){
 }
 
 // ============================================================================
+// MORNING CHECK CARD
+// Every tap already saves (and syncs a second later), so "Done" isn't needed
+// to keep the data. It's there to close the loop: send now, fold the card to
+// one line, and get it out of the way for the rest of the day.
+// ============================================================================
+const PREV_LABEL = { rest:"rest", strength:"strength", run:"run" };
+
+function morningSyncLine(){
+  if(!S.sync.url) return "Saved on this phone.";
+  if(S.syncPending) return navigator.onLine===false ? "Saved on this phone. Will send to your Sheet when you're online." : "Sending to your Sheet…";
+  if(S.syncStatus && !S.syncStatus.ok) return `Saved on this phone. Sheet: ${esc(S.syncStatus.msg)}`;
+  return "✓ Saved to your Sheet";
+}
+
+function morningCard(e, rec){
+  const complete = e.stiff!=null && e.pain!=null && e.prev!=null;
+  const verdict = `<div class="verdict ${rec.cls}"><span class="vi">${rec.icon}</span><span>${rec.text}</span></div>`;
+  if(complete && e.submitted){
+    return `<div class="morning">
+      <div class="mtop"><div class="eyebrow">Morning check ✓</div><button class="editlink" onclick="editMorning()">Edit</button></div>
+      <div class="msum">Loosened in ${e.stiff===45?"45+":e.stiff} min · first-step pain ${e.pain} · yesterday: ${PREV_LABEL[e.prev]||e.prev}</div>
+      <div class="msync">${morningSyncLine()}</div>
+      ${verdict}
+    </div>`;
+  }
+  return `<div class="morning">
+    <div class="eyebrow">Morning check</div>
+
+    <div class="fieldlbl">1 · Minutes to loosen up</div>
+    <div class="hint">First step out of bed until it feels normal. This is the number that moves first.</div>
+    <div class="grid g4">${STIFF_OPTS.map(v=>`
+      <button class="pick ${e.stiff===v?"on":""}" onclick="logField('stiff',${v})">${v===45?"45+":v+"m"}</button>`).join("")}
+    </div>
+
+    <div class="fieldlbl">2 · First-step pain</div>
+    <div class="grid g6">${[0,1,2,3,4,5,6,7,8,9,10].map(v=>`
+      <button class="pick ${e.pain===v?"on":""}" onclick="logField('pain',${v})">${v}</button>`).join("")}
+    </div>
+    <div class="anchor">${e.pain!=null?PAIN_ANCHORS[e.pain]:"Tap a number to see what it means."}</div>
+
+    <div class="fieldlbl">3 · Yesterday</div>
+    <div class="grid g3">${LOADS.map(([k,lbl])=>`
+      <button class="pick ${e.prev===k?"on":""}" onclick="logField('prev','${k}')">${lbl}</button>`).join("")}
+    </div>
+
+    ${complete ? `<button class="donebtn" onclick="submitMorning()">Done</button>` : ""}
+    ${verdict}
+  </div>`;
+}
+
+function submitMorning(){
+  const t = today();
+  S.logs[t] = Object.assign({}, S.logs[t], { submitted:true });
+  save(true);
+  clearTimeout(pushTimer);
+  if(S.sync.url){ S.syncPending = true; render(); pushLogs(); }   // send now, not in a second and a half
+  else { render(); flash("Morning check saved"); }
+}
+function editMorning(){ const t = today(); S.logs[t] = Object.assign({}, S.logs[t], { submitted:false }); save(true); render(); }
+
+// ============================================================================
 // RENDER
 // ============================================================================
 let showSettings=false, showTable=false, coachReply="", coachBusy=false, picked=null;
@@ -662,28 +728,7 @@ function render(){
 
   ${coachNoteCard()}
 
-  <div class="morning">
-    <div class="eyebrow">Morning check</div>
-
-    <div class="fieldlbl">1 · Minutes to loosen up</div>
-    <div class="hint">First step out of bed until it feels normal. This is the number that moves first.</div>
-    <div class="grid g4">${STIFF_OPTS.map(v=>`
-      <button class="pick ${e.stiff===v?"on":""}" onclick="logField('stiff',${v})">${v===45?"45+":v+"m"}</button>`).join("")}
-    </div>
-
-    <div class="fieldlbl">2 · First-step pain</div>
-    <div class="grid g6">${[0,1,2,3,4,5,6,7,8,9,10].map(v=>`
-      <button class="pick ${e.pain===v?"on":""}" onclick="logField('pain',${v})">${v}</button>`).join("")}
-    </div>
-    <div class="anchor">${e.pain!=null?PAIN_ANCHORS[e.pain]:"Tap a number to see what it means."}</div>
-
-    <div class="fieldlbl">3 · Yesterday</div>
-    <div class="grid g3">${LOADS.map(([k,lbl])=>`
-      <button class="pick ${e.prev===k?"on":""}" onclick="logField('prev','${k}')">${lbl}</button>`).join("")}
-    </div>
-
-    <div class="verdict ${rec.cls}"><span class="vi">${rec.icon}</span><span>${rec.text}</span></div>
-  </div>
+  ${morningCard(e, rec)}
 
   ${garminCard()}
 
