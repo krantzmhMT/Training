@@ -56,8 +56,10 @@ function showAppLink() {
   const ui = SpreadsheetApp.getUi();
   setup_();
   const props = PropertiesService.getScriptProperties();
-  let url = props.getProperty("WEBAPP_URL") || ScriptApp.getService().getUrl() || "";
-  // getUrl() can return the editor-only "/dev" address; the app needs the "/exec" one.
+  // Don't trust ScriptApp.getService().getUrl(): in practice it can return an
+  // /exec address that Google answers with "not found". Ask once for the URL
+  // shown on Deploy → Manage deployments, and remember it.
+  let url = props.getProperty("WEBAPP_URL") || "";
   if (!/\/exec$/.test(url)) {
     const res = ui.prompt("One more paste",
       "Paste the Web app URL from the deployment screen (it ends in /exec):", ui.ButtonSet.OK_CANCEL);

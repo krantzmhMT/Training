@@ -19,7 +19,7 @@ The script itself lives here in the repo. The secrets do not: the intervals.icu 
    Click **Deploy**, then **Authorize access**. Google will warn that the app isn't verified. That's expected for your own script: click **Advanced → Go to … (unsafe)**, then **Allow**. Copy the **Web app URL**; it ends in `/exec`.
 4. Reload the Sheet. A **Training sync** menu appears.
    - **1 · Connect intervals.icu:** paste your API key (intervals.icu → Settings → Developer Settings). This pulls the first 90 days.
-   - **2 · Show app connection link:** paste the Web app URL if it asks for it, then copy the link it shows.
+   - **2 · Show app connection link:** paste the Web app URL from **Deploy → Manage deployments** when it asks, then copy the link it shows.
 5. In Morning Coach, tap ⚙ and paste the link into **Sync link**.
 
 ## If you change Code.gs later
