@@ -462,15 +462,49 @@ function recentTable(){
 // cross-origin requests, so the browser skips the OPTIONS preflight that
 // Google Apps Script can't answer.
 // ============================================================================
+// Pull the Apps Script address and token out of whatever got pasted. Phones
+// add surprises when copying: invisible zero-width characters, line breaks,
+// or Gmail's own redirect link wrapped around the real one
+// (https://www.google.com/url?q=https%3A%2F%2Fscript.google.com...).
+// So instead of demanding a perfectly clean URL, search the text for the
+// two pieces we need.
+function parseSyncLink(text){
+  let t = String(text || "");
+  for(let i = 0; i < 2; i++){ try { t = decodeURIComponent(t); } catch { break; } }   // undo %-encoding, even double
+  t = t.replace(/[\s​-‍⁠﻿­]/g, "");                        // whitespace + invisible characters
+  const m = t.match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+  const k = t.match(/[?&]token=([A-Za-z0-9]+)/);
+  return m && k ? { url: m[0], token: k[1] } : null;
+}
+
 function setSyncLink(v){
-  v = v.trim();
-  if(!v){ S.sync = { url:"", token:"" }; S.remote = null; S.syncStatus = null; save(); render(); return; }
-  try {
-    const u = new URL(v), token = u.searchParams.get("token") || "";
-    if(u.hostname !== "script.google.com" || !u.pathname.endsWith("/exec") || !token) throw new Error();
-    S.sync = { url: u.origin + u.pathname, token };
-    save(); render(); pushLogs();
-  } catch { S.syncStatus = { ok:false, msg:"That isn't a sync link. Copy it from the Sheet: Training sync → 2 · Show app connection link.", at:new Date().toISOString() }; save(true); render(); }
+  if(!String(v || "").trim()){ S.sync = { url:"", token:"" }; S.remote = null; S.syncStatus = null; save(); render(); return; }
+  const parsed = parseSyncLink(v);
+  if(!parsed){
+    const shown = String(v).replace(/token=[A-Za-z0-9]+/, "token=…").slice(0, 60);
+    S.syncStatus = { ok:false, msg:`That isn't a sync link. It should contain script.google.com/macros/s/…/exec?token=… — got "${shown}${String(v).length > 60 ? "…" : ""}"`, at:new Date().toISOString() };
+    save(true); render(); return;
+  }
+  S.sync = parsed;
+  save(); render(); pushLogs();
+}
+
+// One-tap setup: opening https://krantzmhmt.github.io/Training/#sync=<link>
+// connects the app. The part after # never leaves the phone (browsers don't
+// send it to the server), so the token isn't exposed to GitHub. The hash is
+// wiped right away so it doesn't linger in the address bar.
+function takeSyncFromAddress(){
+  const h = location.hash;
+  if(!h.startsWith("#sync=")) return;
+  history.replaceState(null, "", location.pathname + location.search);
+  const parsed = parseSyncLink(h.slice(6));
+  if(parsed){
+    S.sync = parsed; S.syncPending = true;
+    S.syncStatus = { ok:true, msg:"Connected from your setup link", at:new Date().toISOString() };
+  } else {
+    S.syncStatus = { ok:false, msg:"That setup link was incomplete. Ask for a new one.", at:new Date().toISOString() };
+  }
+  save(true);
 }
 
 let pushTimer = null;
@@ -786,8 +820,11 @@ Under 150 words, plain text, direct and warm. Judge the trend over single days.`
 // ============================================================================
 // BOOT
 // ============================================================================
+takeSyncFromAddress();
 render();
 if(S.sync.url){ if(S.syncPending) pushLogs(); else pullRemote(); }
+// If the app is already open, tapping the setup link may only change the #part, not reload the page.
+window.addEventListener("hashchange", ()=>{ if(location.hash.startsWith("#sync=")){ takeSyncFromAddress(); render(); if(S.sync.url) pushLogs(); } });
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible" && S.sync.url) pullRemote(); });
 window.addEventListener("online", ()=>{ if(S.syncPending) pushLogs(); });
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
